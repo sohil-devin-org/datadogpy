@@ -12,22 +12,16 @@ Priority:
 import copy
 import logging
 import platform
-import sys
 from threading import Lock
-
-try:
-    from urllib.parse import urlencode as urllib_urlencode
-except ImportError:
-    from urllib import urlencode as urllib_urlencode  # type: ignore[attr-defined,no-redef]
+from typing import TYPE_CHECKING
+from urllib.parse import urlencode as urllib_urlencode
 
 # datadog
 from datadog.api.exceptions import ProxyError, ClientError, HTTPError, HttpTimeout
 
-if sys.version_info[:2] >= (3, 5):
-    from typing import TYPE_CHECKING
-    if TYPE_CHECKING:
-        import types  # noqa: F401
-        from typing import Any, Dict, Optional, Type  # noqa: F401
+if TYPE_CHECKING:
+    import types  # noqa: F401
+    from typing import Any, Dict, Optional, Type  # noqa: F401
 
 
 # 3p
@@ -75,7 +69,7 @@ def _remove_context(exc):
     return exc
 
 
-class HTTPClient(object):
+class HTTPClient:
     """
     An abstract generic HTTP client. Subclasses must implement the `request` methods.
     """
@@ -95,7 +89,7 @@ class HTTPClient(object):
         * `HttpTimeout`: connection timed out
         * `HTTPError`: unexpected HTTP response code
         """
-        raise NotImplementedError(u"Must be implemented by HTTPClient subclasses.")
+        raise NotImplementedError("Must be implemented by HTTPClient subclasses.")
 
 
 class RequestClient(HTTPClient):
@@ -139,9 +133,9 @@ class RequestClient(HTTPClient):
                 raise _remove_context(HTTPError(e.response.status_code, result.reason))
         except TypeError:
             raise TypeError(
-                u"Your installed version of `requests` library seems not compatible with"
-                u"Datadog's usage. We recommend upgrading it ('pip install -U requests')."
-                u"If you need help or have any question, please contact support@datadoghq.com"
+                "Your installed version of `requests` library seems not compatible with"
+                "Datadog's usage. We recommend upgrading it ('pip install -U requests')."
+                "If you need help or have any question, please contact support@datadoghq.com"
             )
 
         return result
@@ -266,17 +260,17 @@ def resolve_http_client():
     Resolve an appropriate HTTP client based the defined priority and user environment.
     """
     if requests:
-        log.debug(u"Use `requests` based HTTP client.")
+        log.debug("Use `requests` based HTTP client.")
         return RequestClient
 
     if urlfetch and urlfetch_errors:
-        log.debug(u"Use `urlfetch` based HTTP client.")
+        log.debug("Use `urlfetch` based HTTP client.")
         return URLFetchClient
 
     if urllib3:
-        log.debug(u"Use `urllib3` based HTTP client.")
+        log.debug("Use `urllib3` based HTTP client.")
         return Urllib3Client
 
     raise ImportError(
-        u"Datadog API client was unable to resolve a HTTP client. " u" Please install `requests` library."
+        "Datadog API client was unable to resolve a HTTP client.  Please install `requests` library."
     )

@@ -41,7 +41,7 @@ class Roles(
         :returns: Dictionary representing the API's JSON response
         """
         params = {}  # type: Dict[str, Any]
-        return super(Roles, cls).update("PATCH", id, params=params, **body)
+        return super().update("PATCH", id, params=params, **body)
 
     @classmethod
     def assign_permission(cls, id, **body):

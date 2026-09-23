@@ -49,6 +49,6 @@ class Distribution(SendableAPIResource):
             # One distribution is sent
             distribution["points"] = format_points(distribution["points"])
             series_dict = {"series": [distribution]}
-        return super(Distribution, cls).send(
+        return super().send(
             attach_host_name=attach_host_name, compress_payload=compress_payload, **series_dict
         )

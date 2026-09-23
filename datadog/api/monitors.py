@@ -45,7 +45,7 @@ class Monitor(
         if "group_states" in params and isinstance(params["group_states"], list):
             params["group_states"] = ",".join(params["group_states"])
 
-        return super(Monitor, cls).get(id, **params)
+        return super().get(id, **params)
 
     @classmethod
     def get_all(cls, **params):
@@ -73,7 +73,7 @@ class Monitor(
             if p in params and isinstance(params[p], list):
                 params[p] = ",".join(params[p])
 
-        return super(Monitor, cls).get_all(**params)
+        return super().get_all(**params)
 
     @classmethod
     def mute(cls, id, **body):
@@ -90,7 +90,7 @@ class Monitor(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Monitor, cls)._trigger_class_action("POST", "mute", id, **body)
+        return super()._trigger_class_action("POST", "mute", id, **body)
 
     @classmethod
     def unmute(cls, id, **body):
@@ -106,7 +106,7 @@ class Monitor(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Monitor, cls)._trigger_class_action("POST", "unmute", id, **body)
+        return super()._trigger_class_action("POST", "unmute", id, **body)
 
     @classmethod
     def mute_all(cls):
@@ -116,7 +116,7 @@ class Monitor(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Monitor, cls)._trigger_class_action("POST", "mute_all")
+        return super()._trigger_class_action("POST", "mute_all")
 
     @classmethod
     def unmute_all(cls):
@@ -126,7 +126,7 @@ class Monitor(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Monitor, cls)._trigger_class_action("POST", "unmute_all")
+        return super()._trigger_class_action("POST", "unmute_all")
 
     @classmethod
     def search(cls, **params):
@@ -136,7 +136,7 @@ class Monitor(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Monitor, cls)._trigger_class_action("GET", "search", params=params)
+        return super()._trigger_class_action("GET", "search", params=params)
 
     @classmethod
     def search_groups(cls, **params):
@@ -146,7 +146,7 @@ class Monitor(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Monitor, cls)._trigger_class_action("GET", "groups/search", params=params)
+        return super()._trigger_class_action("GET", "groups/search", params=params)
 
     @classmethod
     def can_delete(cls, **params):
@@ -156,7 +156,7 @@ class Monitor(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Monitor, cls)._trigger_class_action("GET", "can_delete", params=params)
+        return super()._trigger_class_action("GET", "can_delete", params=params)
 
     @classmethod
     def validate(cls, **body):
@@ -166,4 +166,4 @@ class Monitor(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Monitor, cls)._trigger_class_action("POST", "validate", **body)
+        return super()._trigger_class_action("POST", "validate", **body)

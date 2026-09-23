@@ -36,7 +36,7 @@ class Tag(CreateableAPIResource, UpdatableAPIResource, GetableAPIResource, Lista
         params = {}
         if "source" in body:
             params["source"] = body["source"]
-        return super(Tag, cls).create(id=host, params=params, **body)
+        return super().create(id=host, params=params, **body)
 
     @classmethod
     def update(cls, host, **body):  # type: ignore[override]
@@ -55,4 +55,4 @@ class Tag(CreateableAPIResource, UpdatableAPIResource, GetableAPIResource, Lista
         params = {}
         if "source" in body:
             params["source"] = body["source"]
-        return super(Tag, cls).update(id=host, params=params, **body)
+        return super().update(id=host, params=params, **body)

@@ -32,7 +32,6 @@ from datadog.api.exceptions import (
     ApiError,
     ApiNotInitialized,
 )
-from datadog.util.compat import is_p3k
 from datadog.util.format import normalize_tags
 from tests.unit.api.helper import (
     DatadogAPIWithInitialization,
@@ -121,12 +120,8 @@ class TestInitialization(DatadogAPINoInitialization):
         # Generate a fake agent config
         tmpfilepath = os.path.join(tempfile.gettempdir(), "tmp-agentconfig")
         with open(tmpfilepath, "wb") as f:
-            if is_p3k():
-                f.write(bytes("[Main]\n", 'UTF-8'))
-                f.write(bytes("hostname: {0}\n".format(HOST_NAME), 'UTF-8'))
-            else:
-                f.write("[Main]\n")
-                f.write("hostname: {0}\n".format(HOST_NAME))
+            f.write(bytes("[Main]\n", 'UTF-8'))
+            f.write(bytes("hostname: {0}\n".format(HOST_NAME), 'UTF-8'))
         # Mock get_config_path to return this fake agent config
         mock_config_path.return_value = tmpfilepath
 
@@ -722,9 +717,6 @@ class TestMetricResource(DatadogAPIWithInitialization):
         from fractions import Fraction
 
         m_long = int(1)  # long in Python 3.x
-
-        if not is_p3k():
-            m_long = long(1)  # noqa: F821
 
         supported_data_types = [1, 1.0, m_long, Decimal(1), Fraction(1, 2)]
 

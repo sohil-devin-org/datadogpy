@@ -68,7 +68,7 @@ class Event(GetableAPIResource, CreateableAPIResource, SearchableAPIResource):
             if body["alert_type"] not in ["error", "warning", "info", "success"]:
                 raise ApiError("Parameter alert_type must be either error, warning, info or success")
 
-        return super(Event, cls).create(attach_host_name=attach_host_name, method=method, id=id, params=params, **body)
+        return super().create(attach_host_name=attach_host_name, method=method, id=id, params=params, **body)
 
     @classmethod
     def query(cls, **params):
@@ -96,4 +96,4 @@ class Event(GetableAPIResource, CreateableAPIResource, SearchableAPIResource):
 
         params = {k: timestamp_to_integer(k, v) for k, v in params.items()}
 
-        return super(Event, cls)._search(**params)
+        return super()._search(**params)

@@ -35,7 +35,7 @@ class Host(ActionAPIResource):
         :returns: Dictionary representing the API's JSON response
 
         """
-        return super(Host, cls)._trigger_class_action("POST", "mute", host_name, **body)
+        return super()._trigger_class_action("POST", "mute", host_name, **body)
 
     @classmethod
     def unmute(cls, host_name):
@@ -49,7 +49,7 @@ class Host(ActionAPIResource):
         :returns: Dictionary representing the API's JSON response
 
         """
-        return super(Host, cls)._trigger_class_action("POST", "unmute", host_name)
+        return super()._trigger_class_action("POST", "unmute", host_name)
 
 
 class Hosts(ActionAPIResource, SearchableAPIResource, ListableAPIResource):
@@ -84,7 +84,7 @@ class Hosts(ActionAPIResource, SearchableAPIResource, ListableAPIResource):
         :returns: Dictionary representing the API's JSOn response
 
         """
-        return super(Hosts, cls)._search(**params)
+        return super()._search(**params)
 
     @classmethod
     def totals(cls, **params):
@@ -97,7 +97,7 @@ class Hosts(ActionAPIResource, SearchableAPIResource, ListableAPIResource):
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Hosts, cls)._trigger_class_action("GET", "totals", **params)
+        return super()._trigger_class_action("GET", "totals", **params)
 
     @classmethod
     def get_all(cls, **params):
@@ -139,4 +139,4 @@ class Hosts(ActionAPIResource, SearchableAPIResource, ListableAPIResource):
             if param in params and isinstance(params[param], list):
                 params[param] = ",".join(params[param])
 
-        return super(Hosts, cls).get_all(**params)
+        return super().get_all(**params)

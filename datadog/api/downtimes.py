@@ -38,4 +38,4 @@ class Downtime(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Downtime, cls)._trigger_class_action("POST", "cancel/by_scope", **body)
+        return super()._trigger_class_action("POST", "cancel/by_scope", **body)

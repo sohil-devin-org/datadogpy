@@ -24,7 +24,7 @@ class AwsLogsIntegration(DeletableAPISubResource, ListableAPISubResource, Addabl
         >>> api.AwsLogsIntegration.list_log_services()
         """
         cls._sub_resource_name = "logs/services"
-        return super(AwsLogsIntegration, cls).get_items(id=cls._resource_id, **params)
+        return super().get_items(id=cls._resource_id, **params)
 
     @classmethod
     def add_log_lambda_arn(cls, **params):
@@ -39,7 +39,7 @@ class AwsLogsIntegration(DeletableAPISubResource, ListableAPISubResource, Addabl
         >>> api.AwsLogsIntegration.add_log_lambda_arn(account_id=account_id, lambda_arn=lambda_arn)
         """
         cls._sub_resource_name = "logs"
-        return super(AwsLogsIntegration, cls).add_items(id=cls._resource_id, **params)
+        return super().add_items(id=cls._resource_id, **params)
 
     @classmethod
     def save_services(cls, **params):
@@ -53,7 +53,7 @@ class AwsLogsIntegration(DeletableAPISubResource, ListableAPISubResource, Addabl
         >>> api.AwsLogsIntegration.save_services()
         """
         cls._sub_resource_name = "logs/services"
-        return super(AwsLogsIntegration, cls).add_items(id=cls._resource_id, **params)
+        return super().add_items(id=cls._resource_id, **params)
 
     @classmethod
     def delete_config(cls, **params):
@@ -68,7 +68,7 @@ class AwsLogsIntegration(DeletableAPISubResource, ListableAPISubResource, Addabl
         >>> api.AwsLogsIntegration.delete_config(account_id=account_id, lambda_arn=lambda_arn)
         """
         cls._sub_resource_name = "logs"
-        return super(AwsLogsIntegration, cls).delete_items(id=cls._resource_id, **params)
+        return super().delete_items(id=cls._resource_id, **params)
 
     @classmethod
     def check_lambda(cls, **params):
@@ -90,7 +90,7 @@ class AwsLogsIntegration(DeletableAPISubResource, ListableAPISubResource, Addabl
         >>> api.AwsLogsIntegration.check_lambda(account_id=account_id, lambda_arn=lambda_arn)
         """
         cls._sub_resource_name = "logs/check_async"
-        return super(AwsLogsIntegration, cls).add_items(id=cls._resource_id, **params)
+        return super().add_items(id=cls._resource_id, **params)
 
     @classmethod
     def check_services(cls, **params):
@@ -107,7 +107,7 @@ class AwsLogsIntegration(DeletableAPISubResource, ListableAPISubResource, Addabl
         >>> api.AwsLogsIntegration.check_services()
         """
         cls._sub_resource_name = "logs/services_async"
-        return super(AwsLogsIntegration, cls).add_items(id=cls._resource_id, **params)
+        return super().add_items(id=cls._resource_id, **params)
 
     @classmethod
     def list(cls, **params):
@@ -118,4 +118,4 @@ class AwsLogsIntegration(DeletableAPISubResource, ListableAPISubResource, Addabl
         >>> api.AwsLogsIntegration.list()
         """
         cls._sub_resource_name = "logs"
-        return super(AwsLogsIntegration, cls).get_items(id=cls._resource_id, **params)
+        return super().get_items(id=cls._resource_id, **params)
