@@ -1,13 +1,10 @@
 from threading import Lock
 import random
-import sys
+from typing import Any, Dict, List, Optional, TYPE_CHECKING  # noqa: F401
 
-if sys.version_info[:2] >= (3, 5):
-    from typing import Any, Dict, List, Optional, TYPE_CHECKING  # noqa: F401
-
-    if TYPE_CHECKING:
-        from datadog.dogstatsd.max_sample_metric import MaxSampleMetric
-        from datadog.dogstatsd.metrics import MetricAggregator
+if TYPE_CHECKING:
+    from datadog.dogstatsd.max_sample_metric import MaxSampleMetric
+    from datadog.dogstatsd.metrics import MetricAggregator
 
 
 class MaxSampleMetricContexts:

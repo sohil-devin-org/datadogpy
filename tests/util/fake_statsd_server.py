@@ -15,8 +15,8 @@ import threading
 import time
 from multiprocessing import Array, Event, Process, Value
 
-# pylint: disable=too-many-instance-attributes,useless-object-inheritance
-class FakeServer(object):
+# pylint: disable=too-many-instance-attributes
+class FakeServer:
     """
     Fake statsd server that can be used for testing/benchmarking. Implementation
     Uses a separate process to run and manage the context to not poison the
@@ -83,12 +83,7 @@ class FakeServer(object):
             if self.debug:
                 print("Listening via UDS on", socket_path)
 
-            # We are using ctypes for shmem so we have to use a consistent
-            # datatype across Python versions
-            if sys.version_info[0] > 2:
-                self._socket_path.value = socket_path.encode("utf-8")
-            else:
-                self._socket_path.value = socket_path
+            self._socket_path.value = socket_path.encode("utf-8")
 
         elif self.transport == "UDP":
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
