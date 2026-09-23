@@ -22,7 +22,7 @@ class GcpIntegration(GetableAPIResource, CreateableAPIResource, DeletableAPIReso
 
         >>> api.GcpIntegration.list()
         """
-        return super(GcpIntegration, cls).get(id=cls._resource_id, **params)
+        return super().get(id=cls._resource_id, **params)
 
     @classmethod
     def delete(cls, id=None, **body):
@@ -35,7 +35,7 @@ class GcpIntegration(GetableAPIResource, CreateableAPIResource, DeletableAPIReso
 
         >>> api.GcpIntegration.delete(project_id=project_id, client_email=client_email)
         """
-        return super(GcpIntegration, cls).delete(id=cls._resource_id, body=body)
+        return super().delete(id=cls._resource_id, body=body)
 
     @classmethod
     def create(cls, attach_host_name=False, method="POST", id=None, params=None, **body):
@@ -69,7 +69,7 @@ class GcpIntegration(GetableAPIResource, CreateableAPIResource, DeletableAPIReso
         auth_provider_x509_cert_url=auth_provider_x509_cert_url, \
         client_x509_cert_url=client_x509_cert_url, host_filters=host_filters)
         """
-        return super(GcpIntegration, cls).create(id=cls._resource_id, **body)
+        return super().create(id=cls._resource_id, **body)
 
     @classmethod
     def update(cls, id=None, params=None, **body):
@@ -96,4 +96,4 @@ class GcpIntegration(GetableAPIResource, CreateableAPIResource, DeletableAPIReso
         automute=automute)
         """
         actual_params = {}  # type: Dict[str, Any]
-        return super(GcpIntegration, cls).update(id=cls._resource_id, params=actual_params, **body)
+        return super().update(id=cls._resource_id, params=actual_params, **body)

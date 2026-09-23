@@ -37,7 +37,7 @@ class AwsIntegration(
 
         >>> api.AwsIntegration.list()
         """
-        return super(AwsIntegration, cls).get(id=cls._resource_id, **params)
+        return super().get(id=cls._resource_id, **params)
 
     @classmethod
     def create(cls, attach_host_name=False, method="POST", id=None, params=None, **body):
@@ -99,7 +99,7 @@ class AwsIntegration(
         account_specific_namespace_rules=account_specific_namespace_rules \
         excluded_regions=excluded_regions)
         """
-        return super(AwsIntegration, cls).create(id=cls._resource_id, **body)
+        return super().create(id=cls._resource_id, **body)
 
     @classmethod
     def update(cls, id=None, params=None, **body):
@@ -216,7 +216,7 @@ class AwsIntegration(
                 body["access_key_id"] = body.pop("new_access_key_id")
             if body.get("new_secret_access_key"):
                 body["secret_access_key"] = body.pop("new_secret_access_key")
-        return super(AwsIntegration, cls).update(id=cls._resource_id, params=params, **body)
+        return super().update(id=cls._resource_id, params=params, **body)
 
     @classmethod
     def delete(cls, id=None, **body):
@@ -229,7 +229,7 @@ class AwsIntegration(
 
         >>> api.AwsIntegration.delete()
         """
-        return super(AwsIntegration, cls).delete(id=cls._resource_id, body=body)
+        return super().delete(id=cls._resource_id, body=body)
 
     @classmethod
     def list_namespace_rules(cls, **params):
@@ -240,7 +240,7 @@ class AwsIntegration(
         >>> api.AwsIntegration.list_namespace_rules()
         """
         cls._sub_resource_name = "available_namespace_rules"
-        return super(AwsIntegration, cls).get_items(id=cls._resource_id, **params)
+        return super().get_items(id=cls._resource_id, **params)
 
     @classmethod
     def generate_new_external_id(cls, **params):
@@ -254,4 +254,4 @@ class AwsIntegration(
         >>> api.AwsIntegration.generate_new_external_id()
         """
         cls._sub_resource_name = "generate_new_external_id"
-        return super(AwsIntegration, cls).update_items(id=cls._resource_id, **params)
+        return super().update_items(id=cls._resource_id, **params)

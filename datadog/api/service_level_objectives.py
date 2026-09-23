@@ -36,7 +36,7 @@ class ServiceLevelObjective(
 
         :returns: created SLO details
         """
-        return super(ServiceLevelObjective, cls).create(
+        return super().create(
             attach_host_name=False, method="POST", id=None, params=params, **body
         )
 
@@ -51,7 +51,7 @@ class ServiceLevelObjective(
 
         :returns: SLO details
         """
-        return super(ServiceLevelObjective, cls).get(id, **params)
+        return super().get(id, **params)
 
     @classmethod
     def get_all(cls, query=None, tags_query=None, metrics_query=None, ids=None, offset=0, limit=100, **params):
@@ -91,7 +91,7 @@ class ServiceLevelObjective(
         search_terms["offset"] = offset
         search_terms["limit"] = limit
 
-        return super(ServiceLevelObjective, cls).get_all(**search_terms)
+        return super().get_all(**search_terms)
 
     @classmethod
     def update(cls, id, params=None, **body):
@@ -104,7 +104,7 @@ class ServiceLevelObjective(
 
         :returns: SLO details
         """
-        return super(ServiceLevelObjective, cls).update(id, params, **body)
+        return super().update(id, params, **body)
 
     @classmethod
     def delete(cls, id, **params):
@@ -117,7 +117,7 @@ class ServiceLevelObjective(
 
         :returns: SLO ids removed
         """
-        return super(ServiceLevelObjective, cls).delete(id, **params)
+        return super().delete(id, **params)
 
     @classmethod
     def bulk_delete(cls, ops, **params):
@@ -132,7 +132,7 @@ class ServiceLevelObjective(
             `errors` - errors with operation
             `data` - updates and deletions
         """
-        return super(ServiceLevelObjective, cls)._trigger_class_action(
+        return super()._trigger_class_action(
             "POST",
             "bulk_delete",
             body=ops,
@@ -151,7 +151,7 @@ class ServiceLevelObjective(
 
         :returns: Dictionary representing the API's JSON response see `data` list(slo ids) && `errors`
         """
-        return super(ServiceLevelObjective, cls)._trigger_class_action(
+        return super()._trigger_class_action(
             "DELETE",
             "",
             params=params,
@@ -175,7 +175,7 @@ class ServiceLevelObjective(
                   "errors" contains a dictionary of SLO ID to known reference(s).
         """
         params["ids"] = ids
-        return super(ServiceLevelObjective, cls)._trigger_class_action(
+        return super()._trigger_class_action(
             "GET",
             "can_delete",
             params=params,
@@ -205,7 +205,7 @@ class ServiceLevelObjective(
         params["id"] = id
         params["from_ts"] = force_to_epoch_seconds(from_ts)
         params["to_ts"] = force_to_epoch_seconds(to_ts)
-        return super(ServiceLevelObjective, cls)._trigger_class_action(
+        return super()._trigger_class_action(
             "GET",
             "history",
             id=id,
@@ -222,4 +222,4 @@ class ServiceLevelObjective(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(ServiceLevelObjective, cls)._trigger_class_action("GET", "search", params=params)
+        return super()._trigger_class_action("GET", "search", params=params)

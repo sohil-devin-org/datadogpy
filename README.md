@@ -16,6 +16,8 @@ See [CHANGELOG.md](https://github.com/DataDog/datadogpy/blob/master/CHANGELOG.md
 
 ## Installation
 
+Python 3.9 or newer is required.
+
 To install from pip:
 
     pip install datadog
@@ -171,17 +173,13 @@ If you would like to get an approximate idea on the throughput that your DogStat
 can handle on your system, you can run the included local benchmark code:
 
 ```sh-session
-$ # Python 2 Example
-$ python2 -m unittest -vvv tests.performance.test_statsd_throughput
-
-$ # Python 3 Example
 $ python3 -m unittest -vvv tests.performance.test_statsd_throughput
 ```
 
 You can also add set `BENCHMARK_*` to customize the runs:
 ```sh-session
 $ # Example #1
-$ BENCHMARK_NUM_RUNS=10 BENCHMARK_NUM_THREADS=1 BENCHMARK_NUM_DATAPOINTS=5000 BENCHMARK_TRANSPORT="UDP" python2 -m unittest -vvv tests.performance.test_statsd_throughput
+$ BENCHMARK_NUM_RUNS=10 BENCHMARK_NUM_THREADS=1 BENCHMARK_NUM_DATAPOINTS=5000 BENCHMARK_TRANSPORT="UDP" python3 -m unittest -vvv tests.performance.test_statsd_throughput
 
 $ # Example #2
 $ BENCHMARK_NUM_THREADS=10 BENCHMARK_TRANSPORT="UDS" python3 -m unittest -vvv tests.performance.test_statsd_throughput

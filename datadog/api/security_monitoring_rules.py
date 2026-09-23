@@ -42,7 +42,7 @@ class SecurityMonitoringRule(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(SecurityMonitoringRule, cls).get_all(**params)
+        return super().get_all(**params)
 
     @classmethod
     def get(cls, rule_id, **params):  # type: ignore[override]
@@ -55,7 +55,7 @@ class SecurityMonitoringRule(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(SecurityMonitoringRule, cls).get(rule_id, **params)
+        return super().get(rule_id, **params)
 
     @classmethod
     def create(cls, attach_host_name=False, method="POST", id=None, params=None, **body):
@@ -68,7 +68,7 @@ class SecurityMonitoringRule(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(SecurityMonitoringRule, cls).create(
+        return super().create(
             attach_host_name=attach_host_name, method=method, id=id, params=params, **body
         )
 
@@ -85,7 +85,7 @@ class SecurityMonitoringRule(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(SecurityMonitoringRule, cls).update(rule_id, **params)
+        return super().update(rule_id, **params)
 
     @classmethod
     def delete(cls, rule_id, **params):  # type: ignore[override]
@@ -98,4 +98,4 @@ class SecurityMonitoringRule(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(SecurityMonitoringRule, cls).delete(rule_id, **params)
+        return super().delete(rule_id, **params)

@@ -73,7 +73,7 @@ def parse_time(timestring):
     return int(t)
 
 
-class EventClient(object):
+class EventClient:
     @classmethod
     def setup_parser(cls, subparsers):
         # type: (argparse._SubParsersAction[argparse.ArgumentParser]) -> None

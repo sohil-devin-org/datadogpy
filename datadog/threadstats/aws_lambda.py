@@ -19,7 +19,7 @@ def my_lambda_handle(event, context):
 """
 
 
-class _LambdaDecorator(object):
+class _LambdaDecorator:
     """ DEPRECATED Decorator to automatically init & flush metrics, created for Lambda functions"""
 
     # Number of opened wrappers, flush when 0

@@ -50,4 +50,4 @@ class User(
             "emails": emails,
         }
 
-        return super(User, cls)._trigger_action("POST", "/invite_users", **body)
+        return super()._trigger_action("POST", "/invite_users", **body)

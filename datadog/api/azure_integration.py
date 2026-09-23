@@ -31,7 +31,7 @@ class AzureIntegration(
 
         >>> api.AzureIntegration.list()
         """
-        return super(AzureIntegration, cls).get(id=cls._resource_id, **params)
+        return super().get(id=cls._resource_id, **params)
 
     @classmethod
     def create(cls, attach_host_name=False, method="POST", id=None, params=None, **body):
@@ -47,7 +47,7 @@ class AzureIntegration(
         >>> api.AzureIntegration.create(tenant_name=tenant_name, client_id=client_id, \
         client_secret=client_secret,host_filters=host_filters)
         """
-        return super(AzureIntegration, cls).create(id=cls._resource_id, **body)
+        return super().create(id=cls._resource_id, **body)
 
     @classmethod
     def delete(cls, id=None, **body):
@@ -60,7 +60,7 @@ class AzureIntegration(
 
         >>> api.AzureIntegration.delete(tenant_name=tenant_name, client_id=client_id)
         """
-        return super(AzureIntegration, cls).delete(id=cls._resource_id, body=body)
+        return super().delete(id=cls._resource_id, body=body)
 
     @classmethod
     def update_host_filters(cls, **params):
@@ -76,7 +76,7 @@ class AzureIntegration(
             host_filters=host_filters)
         """
         cls._sub_resource_name = "host_filters"
-        return super(AzureIntegration, cls).add_items(id=cls._resource_id, **params)
+        return super().add_items(id=cls._resource_id, **params)
 
     @classmethod
     def update(cls, id=None, params=None, **body):
@@ -96,4 +96,4 @@ class AzureIntegration(
         client_secret=client_secret, host_filters=host_filters)
         """
         actual_params = {}  # type: Dict[str, Any]
-        return super(AzureIntegration, cls).update(id=cls._resource_id, params=actual_params, **body)
+        return super().update(id=cls._resource_id, params=actual_params, **body)

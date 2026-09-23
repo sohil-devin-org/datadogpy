@@ -7,9 +7,8 @@ import datetime
 import json
 import logging
 import re
+from functools import lru_cache
 from typing import Any, List, Optional, Tuple, Union
-
-from datadog.util.compat import conditional_lru_cache
 
 TAG_INVALID_CHARS_RE = re.compile(r"[^\w\d_\-:/\.]", re.UNICODE)
 TAG_INVALID_CHARS_SUBS = "_"
@@ -37,7 +36,7 @@ def force_to_epoch_seconds(epoch_sec_or_dt):
     return epoch_sec_or_dt
 
 
-@conditional_lru_cache
+@lru_cache(maxsize=512)
 def _normalize_tags_with_cache(tag_list):
     # type: (Tuple[str, ...]) -> List[str]
     return [TAG_INVALID_CHARS_RE.sub(TAG_INVALID_CHARS_SUBS, tag) for tag in tag_list]

@@ -1,6 +1,7 @@
 # Unless explicitly stated otherwise all files in this repository are licensed under the BSD-3-Clause License.
 # This product includes software developed at Datadog (https://www.datadoghq.com/).
 # Copyright 2015-Present Datadog, Inc
+import configparser
 import datetime
 from hashlib import md5
 import json
@@ -15,7 +16,6 @@ import sys
 import pytest
 import requests
 
-from datadog.util.compat import is_p3k, ConfigParser
 from ..api.constants import API_KEY, APP_KEY, MONITOR_REFERENCED_IN_SLO_MESSAGE
 
 WAIT_TIME = 11
@@ -23,17 +23,13 @@ WAIT_TIME = 11
 
 def get_temp_file():
     """Return a (fn, fp) pair"""
-    if is_p3k():
-        fn = "/tmp/{0}-{1}".format(time.time(), random.random())
-        return (fn, open(fn, "w+"))
-    else:
-        tf = tempfile.NamedTemporaryFile()
-        return (tf.name, tf)
+    fn = "/tmp/{0}-{1}".format(time.time(), random.random())
+    return (fn, open(fn, "w+"))
 
 
 @pytest.fixture  # (scope="module")
 def dogshell_config():
-    config = ConfigParser()
+    config = configparser.ConfigParser()
     config.add_section("Connection")
     config.set("Connection", "apikey", API_KEY)
     config.set("Connection", "appkey", APP_KEY)

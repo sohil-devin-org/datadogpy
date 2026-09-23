@@ -13,7 +13,7 @@ from datadog import api
 from datadog.dogshell.common import report_errors, report_warnings, print_err
 
 
-class MonitorClient(object):
+class MonitorClient:
     @classmethod
     def setup_parser(cls, subparsers):
         # type: (argparse._SubParsersAction[argparse.ArgumentParser]) -> None

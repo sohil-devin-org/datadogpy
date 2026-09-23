@@ -14,7 +14,7 @@ import os
 # stdlib
 from contextlib import contextmanager
 from functools import wraps
-from time import time
+from time import monotonic, time
 
 # datadog
 from datadog.api.exceptions import ApiNotInitialized
@@ -22,7 +22,6 @@ from datadog.threadstats.constants import MetricType
 from datadog.threadstats.events import EventsAggregator
 from datadog.threadstats.metrics import MetricsAggregator, Counter, Gauge, Histogram, Timing, Distribution, Set
 from datadog.threadstats.reporters import HttpReporter
-from datadog.util.compat import monotonic
 
 # Loggers
 log = logging.getLogger("datadog.threadstats")
@@ -34,7 +33,7 @@ DD_ENV_TAGS_MAPPING = {
 }
 
 
-class ThreadStats(object):
+class ThreadStats:
     def __init__(self, namespace="", constant_tags=None, compress_payload=False):
         """
         Initialize a threadstats object.

@@ -13,10 +13,9 @@ from mock import patch
 
 # datadog
 from datadog.dogstatsd.base import DogStatsd
-from datadog.util.compat import is_p3k
 
 
-class FakeSocket(object):
+class FakeSocket:
     """
     Mocked socket for testing.
     """
@@ -24,10 +23,7 @@ class FakeSocket(object):
         self.payloads = deque()
 
     def send(self, payload):
-        if is_p3k():
-            assert type(payload) == bytes
-        else:
-            assert type(payload) == str
+        assert type(payload) == bytes
 
         self.payloads.append(payload)
 
@@ -65,7 +61,7 @@ class TestDogStatsdThreadSafety(unittest.TestCase):
         # Count
         self.assertEqual(
             len(packets), count,
-            u"Metric size assertion failed: expected={expected}, received={received}".format(
+            "Metric size assertion failed: expected={expected}, received={received}".format(
                 expected=count, received=len(packets)
             )
         )
@@ -74,7 +70,7 @@ class TestDogStatsdThreadSafety(unittest.TestCase):
             metric_value = int(packet.split(b':', 1)[1].split(b'|', 1)[0])
             self.assertIn(
                 metric_value, values,
-                u"Metric assertion failed: unexpected metric value {metric_value}".format(
+                "Metric assertion failed: unexpected metric value {metric_value}".format(
                     metric_value=metric_value
                 )
             )

@@ -8,7 +8,7 @@ import threading
 from datadog import ThreadStats
 
 
-class MemoryReporter(object):
+class MemoryReporter:
     """ A reporting class that reports to memory for testing. """
 
     def __init__(self):
@@ -40,7 +40,7 @@ class ThreadStatsTest(ThreadStats):
         self.event("title", "content")
 
 
-class TestThreadStatsThreadSafety(object):
+class TestThreadStatsThreadSafety:
 
     def test_threadstats_thread_safety(self):
         stats = ThreadStatsTest()

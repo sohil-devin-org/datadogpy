@@ -28,4 +28,4 @@ class Infrastructure(SearchableAPIResource):
         query = params.get("q", "").split(":")
         if len(query) > 1 and query[0] == "hosts":
             print("[DEPRECATION] Infrastructure.search() is deprecated for ", "hosts. Use `Hosts.search` instead.")
-        return super(Infrastructure, cls)._search(**params)
+        return super()._search(**params)

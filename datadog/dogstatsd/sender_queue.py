@@ -1,14 +1,10 @@
 import collections
 import logging
-import sys
 import threading
-
-from datadog.util.compat import monotonic
+import time
+from typing import Callable, Dict, Optional, Union  # noqa: F401
 
 log = logging.getLogger("datadog.dogstatsd")
-
-if sys.version_info[:2] >= (3, 5):
-    from typing import Callable, Dict, Optional, Union  # noqa: F401
 
 
 # Sentinel telling the background sender thread to shut down.
@@ -17,12 +13,11 @@ Stop = object()
 # What the queue can hold. A payload is either a bare string (replay-safe, no
 # expiry state needed) or a PendingPayload (subject to expiry); Stop is the
 # only other thing that ever goes in, and is matched by identity.
-if sys.version_info[:2] >= (3, 5):
-    QueuedItem = Union[str, "PendingPayload"]  # noqa: F401
-    QueuedItemOrStop = Union[str, "PendingPayload", object]  # noqa: F401
+QueuedItem = Union[str, "PendingPayload"]  # noqa: F401
+QueuedItemOrStop = Union[str, "PendingPayload", object]  # noqa: F401
 
 
-class PendingPayload(object):
+class PendingPayload:
     """A packet queued for the background sender that can go stale.
 
     Only payloads subject to expiry are wrapped in this. A replay-safe
@@ -69,7 +64,7 @@ def payload_text(item):
     return item
 
 
-class SenderQueue(object):
+class SenderQueue:
     """Bounded hand-off queue between application threads and the background sender thread.
 
     put() never rejects a payload outright. When the queue is already at its
@@ -154,7 +149,7 @@ class SenderQueue(object):
         if not self._deque or self._deque[0] is Stop:
             return
 
-        now = monotonic()
+        now = time.monotonic()
         oldest = self._deque.popleft()
         # The oldest entry is always dropped to make room.
         if self._expired(oldest, now):
@@ -199,9 +194,9 @@ class SenderQueue(object):
                     while len(self._deque) >= self._maxsize and not self._closing:
                         self._not_full.wait()
                 elif self._put_timeout > 0:
-                    deadline = monotonic() + self._put_timeout
+                    deadline = time.monotonic() + self._put_timeout
                     while len(self._deque) >= self._maxsize and not self._closing:
-                        remaining = deadline - monotonic()
+                        remaining = deadline - time.monotonic()
                         if remaining <= 0:
                             break
                         self._not_full.wait(remaining)
@@ -272,7 +267,7 @@ class SenderQueue(object):
             if not self._release_in_flight_locked(item, "requeue_front"):
                 return
 
-            if self._expired(item, monotonic()):
+            if self._expired(item, time.monotonic()):
                 self._on_drop_expired(item)
                 self._finish_task_locked()
                 return
@@ -304,12 +299,12 @@ class SenderQueue(object):
             if item is Stop:
                 return item
 
-            # Guard the monotonic() call on the type test rather than letting
+            # Guard the time.monotonic() call on the type test rather than letting
             # _expired() do it: the argument is evaluated BEFORE the call, so
-            # `self._expired(item, monotonic())` read the clock on every get()
+            # `self._expired(item, time.monotonic())` read the clock on every get()
             # including for bare strings, which are replay-safe and can never
             # expire, so the value was computed and immediately discarded.
-            if isinstance(item, PendingPayload) and self._expired(item, monotonic()):
+            if isinstance(item, PendingPayload) and self._expired(item, time.monotonic()):
                 self._on_drop_expired(item)
                 self.task_done(item)
                 continue
@@ -400,12 +395,11 @@ class SenderQueue(object):
                     self._all_tasks_done.wait()
                 return True
 
-            # Condition.wait()'s return value can't be used to detect a
-            # timeout: on Python 2 it is always None. Track the deadline
-            # ourselves instead, the same way put() does for put_timeout.
-            deadline = monotonic() + timeout
+            # Track the deadline ourselves, the same way put() does for
+            # put_timeout.
+            deadline = time.monotonic() + timeout
             while self._unfinished_tasks:
-                remaining = deadline - monotonic()
+                remaining = deadline - time.monotonic()
                 if remaining <= 0:
                     return False
                 self._all_tasks_done.wait(remaining)

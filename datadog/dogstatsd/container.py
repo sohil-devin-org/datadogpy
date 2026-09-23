@@ -6,10 +6,7 @@
 import errno
 import os
 import re
-import sys
-
-if sys.version_info[:2] >= (3, 5):
-    from typing import Optional  # noqa: F401
+from typing import Optional  # noqa: F401
 
 
 class UnresolvableContainerID(Exception):
@@ -18,7 +15,7 @@ class UnresolvableContainerID(Exception):
     """
 
 
-class Cgroup(object):
+class Cgroup:
     """
     A reader class that retrieves either:
     - The current container ID parsed from the cgroup file

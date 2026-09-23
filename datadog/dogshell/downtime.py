@@ -13,7 +13,7 @@ from datadog import api
 from datadog.dogshell.common import report_errors, report_warnings
 
 
-class DowntimeClient(object):
+class DowntimeClient:
     @classmethod
     def setup_parser(cls, subparsers):
         # type: (argparse._SubParsersAction[argparse.ArgumentParser]) -> None
