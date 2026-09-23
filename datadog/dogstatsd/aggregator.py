@@ -1,8 +1,5 @@
 import threading
-import sys
-
-if sys.version_info[:2] >= (3, 5):
-    from typing import Any, Dict, List, Optional  # noqa: F401
+from typing import Any, Dict, List, Optional  # noqa: F401
 
 from datadog.dogstatsd.metrics import (
     CountMetric,
@@ -20,7 +17,7 @@ from datadog.dogstatsd.max_sample_metric_context import MaxSampleMetricContexts
 from datadog.util.format import validate_cardinality
 
 
-class Aggregator(object):
+class Aggregator:
     def __init__(self, max_samples_per_context=0, cardinality=None):
         # type: (int, Optional[str]) -> None
         self.max_samples_per_context = max_samples_per_context
@@ -68,8 +65,8 @@ class Aggregator(object):
 
     def get_context(self, name, tags):
         # type: (str, Optional[List[str]]) -> str
-        tags_str = u",".join(tags) if tags is not None else ""
-        return u"{}:{}".format(name, tags_str)
+        tags_str = ",".join(tags) if tags is not None else ""
+        return "{}:{}".format(name, tags_str)
 
     def count(self, name, value, tags, rate, timestamp=0, cardinality=None):
         # type: (str, Any, Optional[List[str]], Optional[float], int, Optional[str]) -> None

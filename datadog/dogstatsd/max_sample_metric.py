@@ -1,19 +1,12 @@
 import random
-import sys
-
-if sys.version_info[:2] >= (3, 5):
-    from typing import List, Optional, cast  # noqa: F401
-else:
-    from typing import List, Optional  # noqa: F401
-
-    from datadog.util.compat import cast
+from typing import List, Optional, cast  # noqa: F401
 
 from datadog.dogstatsd.metric_types import MetricType
 from datadog.dogstatsd.metrics import MetricAggregator
 from threading import Lock
 
 
-class MaxSampleMetric(object):
+class MaxSampleMetric:
     def __init__(self, name, tags, metric_type, specified_rate=1.0, max_metric_samples=0, cardinality=None):
         # type: (str, Optional[List[str]], str, float, int, Optional[str]) -> None
         self.name = name
@@ -72,13 +65,13 @@ class MaxSampleMetric(object):
 class HistogramMetric(MaxSampleMetric):
     def __init__(self, name, tags, rate=1.0, max_metric_samples=0, cardinality=None):
         # type: (str, Optional[List[str]], float, int, Optional[str]) -> None
-        super(HistogramMetric, self).__init__(name, tags, MetricType.HISTOGRAM, rate, max_metric_samples, cardinality)
+        super().__init__(name, tags, MetricType.HISTOGRAM, rate, max_metric_samples, cardinality)
 
 
 class DistributionMetric(MaxSampleMetric):
     def __init__(self, name, tags, rate=1.0, max_metric_samples=0, cardinality=None):
         # type: (str, Optional[List[str]], float, int, Optional[str]) -> None
-        super(DistributionMetric, self).__init__(
+        super().__init__(
             name, tags, MetricType.DISTRIBUTION, rate, max_metric_samples, cardinality
         )
 
@@ -86,4 +79,4 @@ class DistributionMetric(MaxSampleMetric):
 class TimingMetric(MaxSampleMetric):
     def __init__(self, name, tags, rate=1.0, max_metric_samples=0, cardinality=None):
         # type: (str, Optional[List[str]], float, int, Optional[str]) -> None
-        super(TimingMetric, self).__init__(name, tags, MetricType.TIMING, rate, max_metric_samples, cardinality)
+        super().__init__(name, tags, MetricType.TIMING, rate, max_metric_samples, cardinality)

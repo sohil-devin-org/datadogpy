@@ -14,26 +14,16 @@ import os
 import socket
 import errno
 import struct
-import sys
 import threading
 import time
 from threading import RLock
 import weakref
-
-if sys.version_info[:2] >= (3, 5):
-    from typing import TYPE_CHECKING  # noqa: F401
-
+from urllib.parse import urlparse
 
 # pylint: disable=unused-import
-if sys.version_info[:2] >= (3, 5):
-    from typing import (  # noqa: F401
-        Any, Callable, Iterable, List, Optional, Text, Tuple, Type, Union, overload,
-    )
-
-try:
-    from typing import SupportsIndex
-except ImportError:
-    SupportsIndex = int  # type: ignore[assignment,misc]
+from typing import (  # noqa: F401
+    TYPE_CHECKING, Any, Callable, Iterable, List, Optional, SupportsIndex, Text, Tuple, Type, Union, overload,
+)
 # pylint: enable=unused-import
 
 # Datadog libraries
@@ -50,30 +40,22 @@ from datadog.dogstatsd.sender_queue import (
     PendingPayload,
     Stop,
     payload_text,
+    QueuedItem,  # noqa: F401
 )
-
-if sys.version_info[:2] >= (3, 5):
-    from datadog.dogstatsd.sender_queue import QueuedItem  # noqa: F401
-from datadog.util.compat import monotonic, text, urlparse
 from datadog.util.format import normalize_tags, validate_cardinality
 from datadog.version import __version__
 
 
-if sys.version_info[:2] >= (3, 5):
-    if TYPE_CHECKING:
-        from socket import socket as _Socket
-
-    BaseListClass = List[str]
-else:
-    BaseListClass = list
+if TYPE_CHECKING:
+    from socket import socket as _Socket
 
 
-class TagList(BaseListClass):
+class TagList(List[str]):
     """A list subclass that calls on_change() after any mutation."""
 
     def __init__(self, iterable=(), on_change=None):
         # type: (Iterable[str], Optional[Callable[[], None]]) -> None
-        super(TagList, self).__init__(iterable)
+        super().__init__(iterable)
         self._on_change = on_change
 
     def _notify(self):
@@ -81,78 +63,77 @@ class TagList(BaseListClass):
         if self._on_change is not None:
             self._on_change()
 
-    if sys.version_info[:2] >= (3, 5):
-        @overload
-        def __setitem__(self, index, value):  # noqa: F811
-            # type: (SupportsIndex, str) -> None
-            pass
+    @overload
+    def __setitem__(self, index, value):  # noqa: F811
+        # type: (SupportsIndex, str) -> None
+        pass
 
-        @overload
-        def __setitem__(self, index, value):  # noqa: F811
-            # type: (slice, Iterable[str]) -> None
-            pass
+    @overload
+    def __setitem__(self, index, value):  # noqa: F811
+        # type: (slice, Iterable[str]) -> None
+        pass
 
     def __setitem__(self, index, value):  # noqa: F811
         # type: (Union[SupportsIndex, slice], Union[str, Iterable[str]]) -> None
-        super(TagList, self).__setitem__(index, value)  # type: ignore
+        super().__setitem__(index, value)  # type: ignore
         self._notify()
 
     def __delitem__(self, index):  # noqa: F811
         # type: (Union[SupportsIndex, slice]) -> None
-        super(TagList, self).__delitem__(index)
+        super().__delitem__(index)
         self._notify()
 
     def __iadd__(self, other):  # type: ignore[misc,override]  # noqa: F811
         # type: (Iterable[str]) -> "TagList"
-        super(TagList, self).__iadd__(other)
+        super().__iadd__(other)
         self._notify()
         return self
 
     def __imul__(self, n):  # noqa: F811
         # type: (SupportsIndex) -> "TagList"
-        super(TagList, self).__imul__(n)
+        super().__imul__(n)
         self._notify()
         return self
 
     def append(self, value):  # noqa: F811
         # type: (str) -> None
-        super(TagList, self).append(value)
+        super().append(value)
         self._notify()
 
     def extend(self, iterable):  # noqa: F811
         # type: (Iterable[str]) -> None
-        super(TagList, self).extend(iterable)
+        super().extend(iterable)
         self._notify()
 
     def insert(self, index, value):  # noqa: F811
         # type: (SupportsIndex, str) -> None
-        super(TagList, self).insert(index, value)
+        super().insert(index, value)
         self._notify()
 
     def remove(self, value):  # noqa: F811
         # type: (str) -> None
-        super(TagList, self).remove(value)
+        super().remove(value)
         self._notify()
 
     def pop(self, index=-1):  # noqa: F811
         # type: (SupportsIndex) -> str
-        value = super(TagList, self).pop(index)
+        value = super().pop(index)
         self._notify()
         return value
 
     def clear(self):  # noqa: F811
         # type: () -> None
-        super(TagList, self).__delitem__(slice(None))
+        super().__delitem__(slice(None))
         self._notify()
 
     def sort(self, *args, **kwargs):
         # type: (*Any, **Any) -> None
-        super(TagList, self).sort(*args, **kwargs)
+        super().sort(*args, **kwargs)
         self._notify()
 
     def reverse(self):
         # type: () -> None
-        super(TagList, self).reverse()
+        super().reverse()
         self._notify()
 
 
@@ -284,7 +265,7 @@ if SUPPORTS_FORKING:
 
 # pylint: disable=useless-object-inheritance,too-many-instance-attributes
 # pylint: disable=too-many-arguments,too-many-locals
-class DogStatsd(object):
+class DogStatsd:
     OK, WARNING, CRITICAL, UNKNOWN = (0, 1, 2, 3)
 
     # Cardinality
@@ -575,7 +556,7 @@ class DogStatsd(object):
         self.socket_timeout = socket_timeout
         self.socket_connect_retry = socket_connect_retry
         if socket_path is not None:
-            self.socket_path = socket_path  # type: Optional[text]
+            self.socket_path = socket_path  # type: Optional[str]
             self.host = None
             self.port = None
         else:
@@ -617,7 +598,7 @@ class DogStatsd(object):
         self.constant_tags = TagList(constant_tags + env_tags)
 
         if namespace is not None:
-            namespace = text(namespace)
+            namespace = str(namespace)
         self.namespace = namespace
         self.use_ms = use_ms  # type: bool
         self.default_sample_rate = default_sample_rate
@@ -762,9 +743,7 @@ class DogStatsd(object):
 
         Applications should call stop() before exiting to make sure all pending payloads are sent.
 
-        Compatible with os.fork() starting with Python 3.7. On earlier versions, compatible if applications
-        arrange to call pre_fork(), post_fork_parent() and post_fork_child() module functions around calls
-        to os.fork().
+        Compatible with os.fork() via os.register_at_fork() hooks.
 
         :param sender_queue_size: Set the maximum number of packets to queue for the sender.
             How many packets to queue before blocking or dropping the packet if the packet queue is already full.
@@ -847,7 +826,6 @@ class DogStatsd(object):
             elif parsed.scheme == "udp":
                 try:
                     url_port = parsed.port
-                    # Python 2's urlparse does not bounds-check the port.
                     if url_port is None or url_port < 0 or url_port > 65535:
                         log.warning(
                             "DD_DOGSTATSD_URL %r had no or invalid port number, reverting to default %s",
@@ -1117,7 +1095,6 @@ class DogStatsd(object):
 
         for index, socket_kind in enumerate(valid_socket_kinds):
             is_last_kind = index == len(valid_socket_kinds) - 1
-            # py2 stores socket kinds differently than py3, determine the name independently from version
             sk_name = {socket.SOCK_STREAM: "stream", socket.SOCK_DGRAM: "datagram"}[socket_kind]
             sock = None
             try:
@@ -1575,11 +1552,11 @@ class DogStatsd(object):
     ):
         # type: (Text, str, Any, Optional[List[str]], Optional[float], int, Optional[str]) -> str
         # Create/format the metric packet
-        parts = [(self.namespace + ".") if self.namespace else "", metric, ":", text(value), "|", metric_type]
+        parts = [(self.namespace + ".") if self.namespace else "", metric, ":", str(value), "|", metric_type]
 
         if sample_rate != 1:
             parts.append("|@")
-            parts.append(text(sample_rate))
+            parts.append(str(sample_rate))
 
         constant_tags_str = self._constant_tags_str
         if tags or constant_tags_str:
@@ -1606,7 +1583,7 @@ class DogStatsd(object):
 
         if timestamp > 0:
             parts.append("|T")
-            parts.append(text(timestamp))
+            parts.append(str(timestamp))
 
         return "".join(parts)
 
@@ -1765,7 +1742,7 @@ class DogStatsd(object):
                         # keeps these out of the cyclic GC's traversal set.
                         self._queue.put(packet_with_newline)
                     else:
-                        self._queue.put(PendingPayload(packet_with_newline, monotonic()))
+                        self._queue.put(PendingPayload(packet_with_newline, time.monotonic()))
                     return
 
         self._xmit_packet_with_telemetry(packet + '\n')
@@ -1985,17 +1962,10 @@ class DogStatsd(object):
         title = DogStatsd._escape_event_content(title)
         message = DogStatsd._escape_event_content(message)
 
-        # pylint: disable=undefined-variable
-        if sys.version_info[0] < 3:
-            if not isinstance(title, unicode):                                       # noqa: F821
-                title = unicode(DogStatsd._escape_event_content(title), 'utf8')      # noqa: F821
-            if not isinstance(message, unicode):                                     # noqa: F821
-                message = unicode(DogStatsd._escape_event_content(message), 'utf8')  # noqa: F821
-
         # Append all client level tags to every event
         tags = self._add_constant_tags(tags)
 
-        string = u"_e{{{},{}}}:{}|{}".format(
+        string = "_e{{{},{}}}:{}|{}".format(
             len(title.encode('utf8', 'replace')),
             len(message.encode('utf8', 'replace')),
             title,
@@ -2028,7 +1998,7 @@ class DogStatsd(object):
 
         if len(string) > 8 * 1024:
             raise ValueError(
-                u'Event "{0}" payload is too big (>=8KB). Event discarded'.format(
+                'Event "{0}" payload is too big (>=8KB). Event discarded'.format(
                     title
                 )
             )
@@ -2058,7 +2028,7 @@ class DogStatsd(object):
         """
         message = DogStatsd._escape_service_check_message(message) if message is not None else ""
 
-        string = u"_sc|{0}|{1}".format(check_name, status)
+        string = "_sc|{0}|{1}".format(check_name, status)
 
         # Append all client level tags to every status check
         tags = self._add_constant_tags(tags)
@@ -2069,17 +2039,17 @@ class DogStatsd(object):
         validate_cardinality(cardinality)
 
         if timestamp:
-            string = u"{0}|d:{1}".format(string, timestamp)
+            string = "{0}|d:{1}".format(string, timestamp)
         if hostname:
-            string = u"{0}|h:{1}".format(string, hostname)
+            string = "{0}|h:{1}".format(string, hostname)
         if tags:
-            string = u"{0}|#{1}".format(string, ",".join(tags))
+            string = "{0}|#{1}".format(string, ",".join(tags))
         if message:
-            string = u"{0}|m:{1}".format(string, message)
+            string = "{0}|m:{1}".format(string, message)
         if self._container_id:
-            string = u"{0}|c:{1}".format(string, self._container_id)
+            string = "{0}|c:{1}".format(string, self._container_id)
         if cardinality:
-            string = u"{0}|card:{1}".format(string, cardinality)
+            string = "{0}|card:{1}".format(string, cardinality)
 
         if self._telemetry:
             self.service_checks_count += 1
@@ -2198,7 +2168,7 @@ class DogStatsd(object):
         # a bounded grace period instead, so it can't hang forever on a
         # payload that can genuinely never succeed.
         grace = SENDER_UNBOUNDED_STOP_GRACE_SECONDS if timeout is None else timeout
-        self._sender_stop_deadline = monotonic() + grace
+        self._sender_stop_deadline = time.monotonic() + grace
         # Setting makes _send_to_server() reject any FURTHER producer call outright.
         self._sender_stopping.set()
 
@@ -2284,7 +2254,7 @@ class DogStatsd(object):
                 # queue still considers this item in flight and can finish it
                 # outright instead.
                 deadline = self._sender_stop_deadline
-                if deadline is not None and monotonic() >= deadline:
+                if deadline is not None and time.monotonic() >= deadline:
                     # The deadline has passed: give up on this payload for
                     # good rather than requeuing it for a retry that will
                     # never be awaited. Account for it as a writer drop --
@@ -2316,7 +2286,7 @@ class DogStatsd(object):
                     # should still get drained -- but pace attempts instead
                     # of hammering a connection that keeps failing, and
                     # never sleep past the deadline.
-                    remaining = deadline - monotonic()
+                    remaining = deadline - time.monotonic()
                     time.sleep(min(SENDER_STOP_RETRY_INTERVAL, max(remaining, 0)))
                 continue
 

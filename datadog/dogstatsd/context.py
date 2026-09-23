@@ -3,22 +3,20 @@
 # Copyright 2015-Present Datadog, Inc
 # stdlib
 from functools import wraps
-import sys
+from inspect import iscoroutinefunction
+from time import monotonic
+from typing import Any, Callable, List, Optional, Text, TYPE_CHECKING, Union  # noqa: F401
 
 
 # datadog
 from datadog.dogstatsd.context_async import _get_wrapped_co
-from datadog.util.compat import iscoroutinefunction, monotonic
 
 
-if sys.version_info[:2] >= (3, 5):
-    from typing import Any, Callable, List, Optional, Text, TYPE_CHECKING, Union  # noqa: F401
-
-    if TYPE_CHECKING:
-        from datadog.dogstatsd.base import DogStatsd  # noqa: F401
+if TYPE_CHECKING:
+    from datadog.dogstatsd.base import DogStatsd  # noqa: F401
 
 
-class TimedContextManagerDecorator(object):
+class TimedContextManagerDecorator:
     """
     A context manager and a decorator which will report the elapsed time in
     the context OR in a function call.
@@ -108,5 +106,5 @@ class DistributedContextManagerDecorator(TimedContextManagerDecorator):
         sample_rate=1,  # type: Optional[float]
         use_ms=None,  # type: Optional[bool]
     ):  # type: (...) -> None
-        super(DistributedContextManagerDecorator, self).__init__(statsd, metric, tags, sample_rate, use_ms)
+        super().__init__(statsd, metric, tags, sample_rate, use_ms)
         self.timing_func = statsd.distribution

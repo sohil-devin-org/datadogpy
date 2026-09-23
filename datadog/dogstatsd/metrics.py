@@ -1,12 +1,9 @@
-import sys
-
-if sys.version_info[:2] >= (3, 5):
-    from typing import List, Optional  # noqa: F401
+from typing import List, Optional  # noqa: F401
 
 from datadog.dogstatsd.metric_types import MetricType
 
 
-class MetricAggregator(object):
+class MetricAggregator:
     def __init__(self, name, tags, rate, metric_type, value=0, timestamp=0, cardinality=None):
         # type: (str, Optional[List[str]], float, str, float, int, Optional[str]) -> None
         self.name = name
@@ -25,7 +22,7 @@ class MetricAggregator(object):
 class CountMetric(MetricAggregator):
     def __init__(self, name, value, tags, rate, timestamp=0, cardinality=None):
         # type: (str, float, Optional[List[str]], float, int, Optional[str]) -> None
-        super(CountMetric, self).__init__(
+        super().__init__(
             name, tags, rate, MetricType.COUNT, value, timestamp, cardinality
         )
 
@@ -37,7 +34,7 @@ class CountMetric(MetricAggregator):
 class GaugeMetric(MetricAggregator):
     def __init__(self, name, value, tags, rate, timestamp=0, cardinality=None):
         # type: (str, float, Optional[List[str]], float, int, Optional[str]) -> None
-        super(GaugeMetric, self).__init__(
+        super().__init__(
             name, tags, rate, MetricType.GAUGE, value, timestamp, cardinality
         )
 
@@ -50,7 +47,7 @@ class SetMetric(MetricAggregator):
     def __init__(self, name, value, tags, rate, timestamp=0, cardinality=None):
         # type: (str, float, Optional[List[str]], float, int, Optional[str]) -> None
         default_value = 0
-        super(SetMetric, self).__init__(
+        super().__init__(
             name, tags, rate, MetricType.SET, default_value, default_value, cardinality
         )
         self.data = set()
