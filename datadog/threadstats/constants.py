@@ -3,7 +3,7 @@
 # Copyright 2015-Present Datadog, Inc
 
 
-class MetricType(object):
+class MetricType:
     Gauge = "gauge"
     Counter = "counter"
     Histogram = "histogram"
@@ -11,7 +11,7 @@ class MetricType(object):
     Distribution = "distribution"
 
 
-class MonitorType(object):
+class MonitorType:
     SERVICE_CHECK = "service check"
     METRIC_ALERT = "metric alert"
     QUERY_ALERT = "query alert"
