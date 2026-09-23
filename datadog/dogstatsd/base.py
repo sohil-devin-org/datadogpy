@@ -1740,6 +1740,14 @@ class DogStatsd(object):
         return self._telemetry and \
             self._last_flush_time + self._telemetry_flush_interval < time.time()
 
+    def _packet_size(self, packet):
+        # type: (str) -> int
+        """Size in bytes of `packet` once encoded for the wire."""
+        try:
+            return len(packet.encode(self.encoding))
+        except UnicodeError:
+            return len(packet)
+
     def _send_to_server(self, packet, replay_safe=False):
         # type: (str, bool) -> None
         # Skip the lock if the queue is None or a shutdown has already been
@@ -1787,11 +1795,11 @@ class DogStatsd(object):
             if self._xmit_packet(telemetry, True):
                 self._reset_telemetry()
                 self.packets_sent += 1
-                self.bytes_sent += len(telemetry)
+                self.bytes_sent += self._packet_size(telemetry)
             else:
                 # Telemetry packet has been dropped, keep telemetry data for the next flush
                 self._last_flush_time = time.time()
-                self.bytes_dropped_writer += len(telemetry)
+                self.bytes_dropped_writer += self._packet_size(telemetry)
                 self.packets_dropped_writer += 1
 
         return sent
@@ -1832,7 +1840,7 @@ class DogStatsd(object):
             return None
 
         if not is_telemetry and self._telemetry:
-            self.bytes_dropped_writer += len(packet)
+            self.bytes_dropped_writer += self._packet_size(packet)
             self.packets_dropped_writer += 1
         return False
 
@@ -1865,7 +1873,7 @@ class DogStatsd(object):
 
                 if not is_telemetry and self._telemetry:
                     self.packets_sent += 1
-                    self.bytes_sent += len(packet)
+                    self.bytes_sent += len(encoded_packet)
 
                 return True
             except socket.timeout:
