@@ -126,6 +126,11 @@ class OverflownSocket(BrokenSocket):
         super(OverflownSocket, self).__init__(errno.EAGAIN)
 
 
+def byte_len(payload):
+    """Wire size of a payload: the bytes_* telemetry counters count encoded bytes."""
+    return len(payload.encode("utf-8"))
+
+
 def telemetry_metrics(metrics=1, events=0, service_checks=0, bytes_sent=0, bytes_dropped_writer=0, packets_sent=1, packets_dropped_writer=0, transport="udp", tags="", bytes_dropped_queue=0, packets_dropped_queue=0, bytes_dropped_expired=0, packets_dropped_expired=0):
     tags = "," + tags if tags else ""
 
@@ -200,7 +205,7 @@ class TestDogStatsd(unittest.TestCase):
 
     def assert_equal_telemetry(self, expected_payload, actual_payload, telemetry=None, **kwargs):
         if telemetry is None:
-            telemetry = telemetry_metrics(bytes_sent=len(expected_payload), **kwargs)
+            telemetry = telemetry_metrics(bytes_sent=byte_len(expected_payload), **kwargs)
 
         if expected_payload:
             expected_payload = "\n".join([expected_payload, telemetry])
@@ -256,7 +261,7 @@ class TestDogStatsd(unittest.TestCase):
             expected_metrics=telemetry_metrics(
                 metrics=metrics,
                 packets_sent=packets_sent,
-                bytes_sent=len(message) + last_telemetry_size
+                bytes_sent=byte_len(message) + last_telemetry_size
             )
             self.assert_equal_telemetry(
                 message,
@@ -682,7 +687,7 @@ class TestDogStatsd(unittest.TestCase):
             telemetry=telemetry_metrics(
                 metrics=0,
                 events=1,
-                bytes_sent=len(event2),
+                bytes_sent=byte_len(event2),
             ),
         )
 
@@ -697,7 +702,7 @@ class TestDogStatsd(unittest.TestCase):
             telemetry=telemetry_metrics(
                 metrics=0,
                 events=1,
-                bytes_sent=len(event3),
+                bytes_sent=byte_len(event3),
             ),
         )
 
@@ -713,7 +718,7 @@ class TestDogStatsd(unittest.TestCase):
             telemetry=telemetry_metrics(
                 metrics=0,
                 events=1,
-                bytes_sent=len(event),
+                bytes_sent=byte_len(event),
             ),
         )
 
@@ -729,7 +734,7 @@ class TestDogStatsd(unittest.TestCase):
             telemetry=telemetry_metrics(
                 metrics=0,
                 events=1,
-                bytes_sent=len(event),
+                bytes_sent=byte_len(event),
             ),
         )
 
@@ -746,7 +751,7 @@ class TestDogStatsd(unittest.TestCase):
                 metrics=0,
                 events=1,
                 tags="bar:baz,foo",
-                bytes_sent=len(event),
+                bytes_sent=byte_len(event),
             ),
         )
 
@@ -762,7 +767,7 @@ class TestDogStatsd(unittest.TestCase):
                 metrics=0,
                 events=1,
                 tags="bar:baz,foo",
-                bytes_sent=len(event),
+                bytes_sent=byte_len(event),
             ),
         )
 
@@ -797,7 +802,7 @@ class TestDogStatsd(unittest.TestCase):
             telemetry=telemetry_metrics(
                 metrics=0,
                 service_checks=1,
-                bytes_sent=len(check),
+                bytes_sent=byte_len(check),
             ),
         )
 
@@ -816,7 +821,7 @@ class TestDogStatsd(unittest.TestCase):
                 metrics=0,
                 service_checks=1,
                 tags="bar:baz,foo",
-                bytes_sent=len(check),
+                bytes_sent=byte_len(check),
             ),
         )
 
@@ -834,7 +839,7 @@ class TestDogStatsd(unittest.TestCase):
                 metrics=0,
                 service_checks=1,
                 tags="bar:baz,foo",
-                bytes_sent=len(check),
+                bytes_sent=byte_len(check),
             ),
         )
 
@@ -851,13 +856,13 @@ class TestDogStatsd(unittest.TestCase):
         self.statsd.constant_tags = ['bar:baz', 'foo']
         self.statsd.gauge('gauge', 123.4)
         metric = 'gauge:123.4|g|#bar:baz,foo\n'
-        self.assert_equal_telemetry(metric, self.recv(2), telemetry=telemetry_metrics(tags="bar:baz,foo", bytes_sent=len(metric)))
+        self.assert_equal_telemetry(metric, self.recv(2), telemetry=telemetry_metrics(tags="bar:baz,foo", bytes_sent=byte_len(metric)))
 
     def test_counter_constant_tag_with_metric_level_tags(self):
         self.statsd.constant_tags = ['bar:baz', 'foo']
         self.statsd.increment('page.views', tags=['extra'])
         metric = 'page.views:1|c|#extra,bar:baz,foo\n'
-        self.assert_equal_telemetry(metric, self.recv(2), telemetry=telemetry_metrics(tags="bar:baz,foo", bytes_sent=len(metric)))
+        self.assert_equal_telemetry(metric, self.recv(2), telemetry=telemetry_metrics(tags="bar:baz,foo", bytes_sent=byte_len(metric)))
 
     def test_gauge_constant_tags_with_metric_level_tags_twice(self):
         metric_level_tag = ['foo:bar']
@@ -869,7 +874,7 @@ class TestDogStatsd(unittest.TestCase):
             self.recv(2),
             telemetry=telemetry_metrics(
                 tags="bar:baz",
-                bytes_sent=len(metric),
+                bytes_sent=byte_len(metric),
             ),
         )
 
@@ -884,7 +889,7 @@ class TestDogStatsd(unittest.TestCase):
             self.recv(2, reset_wait=True),
             telemetry=telemetry_metrics(
                 tags="bar:baz",
-                bytes_sent=len(metric),
+                bytes_sent=byte_len(metric),
             ),
         )
 
@@ -1532,7 +1537,7 @@ async def print_foo():
         self.assert_equal_telemetry(
                 expected,
                 self.recv(2),
-                telemetry=telemetry_metrics(metrics=2, bytes_sent=len(expected))
+                telemetry=telemetry_metrics(metrics=2, bytes_sent=byte_len(expected))
         )
 
     def test_flush_dgram(self):
@@ -1751,7 +1756,7 @@ async def print_foo():
         self.statsd.close_buffer()
 
         expected1 = 'discarded.data:123|g\n'
-        expected_metrics1=telemetry_metrics(metrics=1, bytes_sent=len(expected1))
+        expected_metrics1=telemetry_metrics(metrics=1, bytes_sent=byte_len(expected1))
         self.assert_equal_telemetry(
             expected1,
             self.recv(2),
@@ -1764,7 +1769,7 @@ async def print_foo():
             telemetry=telemetry_metrics(
                 metrics=2,
                 packets_sent=2,
-                bytes_sent=len(expected2 + expected_metrics1)
+                bytes_sent=byte_len(expected2 + expected_metrics1)
             )
         )
 
@@ -1952,6 +1957,29 @@ async def print_foo():
         self.assertEqual(0, self.statsd.bytes_dropped_queue)
         self.assertEqual(0, self.statsd.packets_dropped_queue)
 
+    def test_bytes_sent_counts_encoded_bytes(self):
+        statsd = DogStatsd()
+        statsd.socket = FakeSocket()
+        statsd._reset_telemetry()
+
+        statsd.gauge('page.views', 1, tags=[u'city:montréal'])
+        statsd.flush()
+
+        datagram = u'page.views:1|g|#city:montréal\n'.encode('utf-8')
+        self.assertEqual([datagram], list(statsd.socket.payloads))
+        self.assertEqual(len(datagram), statsd.bytes_sent)
+
+    def test_bytes_dropped_writer_counts_encoded_bytes(self):
+        statsd = DogStatsd()
+        statsd.socket = BrokenSocket()
+        statsd._reset_telemetry()
+
+        statsd.gauge('page.views', 1, tags=[u'city:montréal'])
+        statsd.flush()
+
+        datagram = u'page.views:1|g|#city:montréal\n'.encode('utf-8')
+        self.assertEqual(len(datagram), statsd.bytes_dropped_writer)
+
     def test_telemetry_folds_expired_drops_into_dropped_queue(self):
         # There's no dedicated wire metric for expired drops: they're
         # reported to the Agent as part of *_dropped_queue (and the combined
@@ -1977,7 +2005,7 @@ async def print_foo():
         payload = 'page.views:123|g\n'
         telemetry = telemetry_metrics(
             metrics=1,
-            bytes_sent=len(payload),
+            bytes_sent=byte_len(payload),
             packets_sent=1,
             bytes_dropped_queue=8,
             packets_dropped_queue=9,
@@ -2078,7 +2106,7 @@ async def print_foo():
         dogstatsd.close_buffer()
 
         metric = 'gauge1:1|g\ngauge2:2|g\n'
-        self.assert_equal_telemetry(metric, fake_socket.recv(2), telemetry=telemetry_metrics(metrics=2, bytes_sent=len(metric)))
+        self.assert_equal_telemetry(metric, fake_socket.recv(2), telemetry=telemetry_metrics(metrics=2, bytes_sent=byte_len(metric)))
         # assert that _last_flush_time has been updated
         self.assertTrue(time1 < dogstatsd._last_flush_time)
 
@@ -2188,7 +2216,7 @@ async def print_foo():
 
         metrics_packet = telemetry_metrics(
             metrics=3,
-            bytes_sent=len(metrics),
+            bytes_sent=byte_len(metrics),
             packets_sent=1,
         )
         self.assertEqual(metrics_packet, fake_socket.recv(no_wait=True))
@@ -2213,11 +2241,11 @@ async def print_foo():
         metrics1 = '\n'.join([metric1, metric2]) + "\n"
         self.assertEqual(metrics1, fake_socket.recv(no_wait=True))
 
-        metrics_packet1 = telemetry_metrics(metrics=2, bytes_sent=len(metrics1), packets_sent=1)
+        metrics_packet1 = telemetry_metrics(metrics=2, bytes_sent=byte_len(metrics1), packets_sent=1)
         self.assertEqual(metrics_packet1, fake_socket.recv(no_wait=True))
 
         metrics2 = '\n'.join([metric3, metric4]) + "\n"
-        metrics_packet2 = telemetry_metrics(metrics=2, bytes_sent=len(metrics_packet1 + metrics2), packets_sent=2)
+        metrics_packet2 = telemetry_metrics(metrics=2, bytes_sent=byte_len(metrics_packet1 + metrics2), packets_sent=2)
         self.assertEqual(metrics2, fake_socket.recv(reset_wait=True))
         self.assertEqual(metrics_packet2, fake_socket.recv())
 
@@ -2241,16 +2269,16 @@ async def print_foo():
         metrics1 = '\n'.join([metric1, metric2]) + "\n"
         self.assertEqual(metrics1, fake_socket.recv(no_wait=True))
 
-        metrics_packet1 = telemetry_metrics(metrics=2, bytes_sent=len(metrics1), packets_sent=1)
+        metrics_packet1 = telemetry_metrics(metrics=2, bytes_sent=byte_len(metrics1), packets_sent=1)
         self.assertEqual(metrics_packet1, fake_socket.recv(no_wait=True))
 
         metrics2 = '\n'.join([metric3]) + "\n"
-        metrics_packet2 = telemetry_metrics(metrics=1, bytes_sent=len(metrics_packet1 + metrics2), packets_sent=2)
+        metrics_packet2 = telemetry_metrics(metrics=1, bytes_sent=byte_len(metrics_packet1 + metrics2), packets_sent=2)
         self.assertEqual(metrics2, fake_socket.recv())
         self.assertEqual(metrics_packet2, fake_socket.recv(no_wait=True))
 
         metrics3 = '\n'.join([metric4]) + "\n"
-        metrics_packet3 = telemetry_metrics(metrics=1, bytes_sent=len(metrics_packet2 + metrics3), packets_sent=2)
+        metrics_packet3 = telemetry_metrics(metrics=1, bytes_sent=byte_len(metrics_packet2 + metrics3), packets_sent=2)
         self.assertEqual(metrics3, fake_socket.recv())
         self.assertEqual(metrics_packet3, fake_socket.recv(no_wait=True))
 
@@ -2270,7 +2298,7 @@ async def print_foo():
 
             telemetry = telemetry_metrics(
                 metrics=metrics_per_packet+1,
-                bytes_sent=len(payload),
+                bytes_sent=byte_len(payload),
             )
             bytes_sent += len(payload) + len(telemetry)
             self.assertEqual(payload, fake_socket.recv())
@@ -2278,7 +2306,7 @@ async def print_foo():
 
         self.assertEqual(single_metric, fake_socket.recv())
 
-        telemetry = telemetry_metrics(metrics=0, packets_sent=2, bytes_sent=len(single_metric) + len(telemetry))
+        telemetry = telemetry_metrics(metrics=0, packets_sent=2, bytes_sent=byte_len(single_metric) + len(telemetry))
         self.assertEqual(telemetry, fake_socket.recv())
 
     def test_module_level_instance(self):
@@ -2310,7 +2338,7 @@ async def print_foo():
         dogstatsd.gauge('gt', 123.4)
         metric = 'gt:123.4|g|#country:china,age:45,blue\n'
         self.assertEqual(metric, dogstatsd.socket.recv())
-        self.assertEqual(telemetry_metrics(tags="country:china,age:45,blue", bytes_sent=len(metric)), dogstatsd.socket.recv())
+        self.assertEqual(telemetry_metrics(tags="country:china,age:45,blue", bytes_sent=byte_len(metric)), dogstatsd.socket.recv())
 
     def test_tags_from_environment_and_constant(self):
         with preserve_environment_variable('DATADOG_TAGS'):
@@ -2321,7 +2349,7 @@ async def print_foo():
         tags = "country:canada,red,country:china,age:45,blue"
         metric = 'gt:123.4|g|#' + tags + '\n'
         self.assertEqual(metric, dogstatsd.socket.recv())
-        self.assertEqual(telemetry_metrics(tags=tags, bytes_sent=len(metric)), dogstatsd.socket.recv())
+        self.assertEqual(telemetry_metrics(tags=tags, bytes_sent=byte_len(metric)), dogstatsd.socket.recv())
 
     def test_entity_id_and_container_id(self):
         with preserve_environment_variable('DD_ENTITY_ID'):
@@ -2335,7 +2363,7 @@ async def print_foo():
         tags = "dd.internal.entity_id:04652bb7-19b7-11e9-9cc6-42010a9c016d"
         metric = 'page.views:1|c|#' + tags + '|c:ci-fake-container-id\n'
         self.assertEqual(metric, dogstatsd.socket.recv())
-        self.assertEqual(telemetry_metrics(tags=tags, bytes_sent=len(metric)), dogstatsd.socket.recv())
+        self.assertEqual(telemetry_metrics(tags=tags, bytes_sent=byte_len(metric)), dogstatsd.socket.recv())
 
     def test_entity_id_and_container_id_and_external_env(self):
         with preserve_environment_variable('DD_ENTITY_ID'), preserve_environment_variable('DD_EXTERNAL_ENV'):
@@ -2350,7 +2378,7 @@ async def print_foo():
         tags = "dd.internal.entity_id:04652bb7-19b7-11e9-9cc6-42010a9c016d"
         metric = 'page.views:1|c|#' + tags + '|c:ci-fake-container-id' + '|e:it-false,cn-container-name,pu-04652bb7-19b7-11e9-9cc6-42010a9c016d' + '\n'
         self.assertEqual(metric, dogstatsd.socket.recv())
-        self.assertEqual(telemetry_metrics(tags=tags, bytes_sent=len(metric)), dogstatsd.socket.recv())
+        self.assertEqual(telemetry_metrics(tags=tags, bytes_sent=byte_len(metric)), dogstatsd.socket.recv())
 
     def test_entity_tag_from_environment(self):
         with preserve_environment_variable('DD_ENTITY_ID'):
@@ -2361,7 +2389,7 @@ async def print_foo():
         metric = 'gt:123.4|g|#dd.internal.entity_id:04652bb7-19b7-11e9-9cc6-42010a9c016d\n'
         self.assertEqual(metric, dogstatsd.socket.recv())
         self.assertEqual(
-            telemetry_metrics(tags="dd.internal.entity_id:04652bb7-19b7-11e9-9cc6-42010a9c016d", bytes_sent=len(metric)),
+            telemetry_metrics(tags="dd.internal.entity_id:04652bb7-19b7-11e9-9cc6-42010a9c016d", bytes_sent=byte_len(metric)),
             dogstatsd.socket.recv())
 
     def test_entity_tag_from_environment_and_constant(self):
@@ -2374,7 +2402,7 @@ async def print_foo():
         self.assertEqual(metric, dogstatsd.socket.recv())
         self.assertEqual(
             telemetry_metrics(tags="country:canada,red,dd.internal.entity_id:04652bb7-19b7-11e9-9cc6-42010a9c016d",
-                              bytes_sent=len(metric)),
+                              bytes_sent=byte_len(metric)),
             dogstatsd.socket.recv()
         )
 
@@ -2389,7 +2417,7 @@ async def print_foo():
         tags = "country:canada,red,country:china,age:45,blue,dd.internal.entity_id:04652bb7-19b7-11e9-9cc6-42010a9c016d"
         metric = 'gt:123.4|g|#' + tags + '\n'
         self.assertEqual(metric, dogstatsd.socket.recv())
-        self.assertEqual(telemetry_metrics(tags=tags, bytes_sent=len(metric)), dogstatsd.socket.recv())
+        self.assertEqual(telemetry_metrics(tags=tags, bytes_sent=byte_len(metric)), dogstatsd.socket.recv())
 
     def test_dogstatsd_initialization_with_dd_env_service_version(self):
         """
@@ -2437,7 +2465,7 @@ async def print_foo():
             self.assertEqual(
                 telemetry_metrics(
                     tags=global_tags_str,
-                    bytes_sent=len(metric)
+                    bytes_sent=byte_len(metric)
                 ),
                 dogstatsd.socket.recv(),
             )
@@ -2454,7 +2482,7 @@ async def print_foo():
             self.assertEqual(
                 telemetry_metrics(
                     tags=global_tags_str,
-                    bytes_sent=len(metric),
+                    bytes_sent=byte_len(metric),
                 ),
                 dogstatsd.socket.recv(),
             )
@@ -2600,7 +2628,7 @@ async def print_foo():
             telemetry=telemetry_metrics(
                 metrics=0,
                 events=1,
-                bytes_sent=len(event2),
+                bytes_sent=byte_len(event2),
             ),
         )
 
@@ -2614,7 +2642,7 @@ async def print_foo():
             telemetry=telemetry_metrics(
                 metrics=0,
                 events=1,
-                bytes_sent=len(event3),
+                bytes_sent=byte_len(event3),
             ),
         )
         self.statsd._container_id = None
@@ -2639,7 +2667,7 @@ async def print_foo():
             telemetry=telemetry_metrics(
                 metrics=0,
                 service_checks=1,
-                bytes_sent=len(check),
+                bytes_sent=byte_len(check),
             ),
         )
         self.statsd._container_id = None
