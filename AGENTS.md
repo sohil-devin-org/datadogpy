@@ -2,8 +2,9 @@
 
 Python client for the Datadog API (`datadog.api`), DogStatsD (`datadog.dogstatsd`),
 ThreadStats (`datadog.threadstats`) and the `dog`/`dogwrap`/`dogshell` CLIs.
-Pure Python, no compiled extensions. `pyproject.toml` still declares `requires-python >= 2.7`;
-`datadog/util/compat.py` holds the py2/py3 shims.
+Pure Python, no compiled extensions. Python 3.9+ only (`requires-python = ">=3.9"` in `pyproject.toml`);
+do not add Python 2 shims, `sys.version_info` guards for versions below 3.9, `from __future__` imports,
+or `u""` string prefixes.
 
 ## Setup
 
@@ -45,8 +46,7 @@ iterating; run the full set once before pushing.
 ## CI
 
 - `quick-check`: one Python 3.12 job with everything in "Verify" above (~3 min). Runs on every PR.
-- `test`: lint + 10-interpreter matrix (3.7–3.14, pypy2.7, pypy3.8) + py2.7/py3.4 in Docker.
-  Runs on every PR.
+- `test`: lint + 7-interpreter matrix (3.9–3.14, pypy3.10). Runs on every PR.
 - `CodeQL`: python analysis on PRs to `master`. All three `github/codeql-action/*` steps must be on
   the same major version.
 - `Ensure labels`: requires a `changelog/*` label.

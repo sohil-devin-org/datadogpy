@@ -3,182 +3,100 @@
 # Copyright 2015-Present Datadog, Inc
 # flake8: noqa
 """
-Imports for compatibility with Python 2, Python 3 and Google App Engine.
+Legacy Python 2/3 compatibility shims.
+
+Every name here has a direct standard-library equivalent on Python 3.9+; callers
+should import that instead. This module only exists so that packages that have not
+been migrated yet keep importing.
+
+`configparser` and `urllib.request` are deliberately imported lazily: importing them
+eagerly slows down cold starts in serverless environments (see
+`tests/unit/util/test_compat.py::test_slow_imports`).
 """
+import builtins
+import importlib
 import logging
 import sys
-from typing import TypeVar, Any, Type
-from typing import Any, Callable, Dict, Iterator, Tuple, TYPE_CHECKING, TypeVar
+from collections import UserDict as IterableUserDict
+from functools import lru_cache
+from inspect import iscoroutinefunction
+from io import StringIO
+from logging import NullHandler
+from time import monotonic
+from typing import Any, Callable, Dict, Iterator, Tuple, Type, TypeVar, TYPE_CHECKING, cast
+from urllib.parse import urlparse
 
 if TYPE_CHECKING:
-    from configparser import ConfigParser as ConfigParserType # noqa: F401Type
+    from configparser import ConfigParser as ConfigParserType  # noqa: F401
 
-    K = TypeVar('K')
-    V = TypeVar('V')
+K = TypeVar("K")
+V = TypeVar("V")
+T = TypeVar("T")
 
-
-# Logging
 log = logging.getLogger("datadog.util")
 
-# Note: using `sys.version_info` instead of the helper functions defined here
-# so that mypy detects version-specific code paths. Currently, mypy doesn't
-# support try/except imports for version-specific code paths either.
-#
-# https://mypy.readthedocs.io/en/stable/common_issues.html#python-version-and-system-platform-checks
 
-# Python 3.x
-if sys.version_info[0] >= 3:
-    import builtins
-    from collections import UserDict as IterableUserDict
-    from io import StringIO
-    from urllib.parse import urlparse
+class LazyLoader(object):
+    def __init__(self, module_name):
+        # type: (str) -> None
+        self.module_name = module_name
 
-    class LazyLoader(object):
-        def __init__(self, module_name):
-            # type: (str) -> None
-            self.module_name = module_name
-
-        def __getattr__(self, name):
-            # type: (str) -> Any
-            # defer the importing of the module to when one of its attributes
-            # is accessed
-            import importlib
-            mod = importlib.import_module(self.module_name)
-            return getattr(mod, name)
-
-    url_lib = LazyLoader('urllib.request')
-    configparser = LazyLoader('configparser')
-
-    def ConfigParser():
-        # type: () -> ConfigParserType
-        return configparser.ConfigParser()
-
-    imap = map
-    get_input = input
-    text = str
-
-    def iteritems(d):
-        # type: (Dict[K, V]) -> Iterator[Tuple[K, V]]
-        return iter(d.items())
-
-    def iternext(iter):
-        # type: (Iterator[V]) -> V
-        return next(iter)
+    def __getattr__(self, name):
+        # type: (str) -> Any
+        # defer the importing of the module to when one of its attributes
+        # is accessed
+        mod = importlib.import_module(self.module_name)
+        return getattr(mod, name)
 
 
-# Python 2.x
-else:
-    import __builtin__ as builtins
-    import ConfigParser as configparser
-    from configparser import ConfigParser
-    from cStringIO import StringIO
-    from itertools import imap
-    import urllib2 as url_lib
-    from urlparse import urlparse
-    from UserDict import IterableUserDict
-
-    get_input = raw_input
-    text = unicode
-
-    def iteritems(d):
-        # type: (Dict[K, V]) -> Iterator[Tuple[K, V]]
-        return d.iteritems()
-
-    def iternext(iter):
-        # type: (Iterator[V]) -> V
-        return iter.next()
+url_lib = LazyLoader("urllib.request")
+configparser = LazyLoader("configparser")
 
 
-# Python >= 3.5
-if sys.version_info >= (3, 5):
-    from inspect import iscoroutinefunction
-# Others
-else:
-
-    def iscoroutinefunction(*args, **kwargs):
-        return False
+def ConfigParser():
+    # type: () -> ConfigParserType
+    return configparser.ConfigParser()
 
 
-# Python >= 2.7
-if sys.version_info >= (2, 7):
-    from logging import NullHandler
-# Python 2.6.x
-else:
-    class NullHandler(logging.Handler):
-        def emit(self, record):
-            pass
+imap = map
+get_input = input
+text = str
 
 
-# Python >= 3.3
-if sys.version_info >= (3, 3):
-    from time import monotonic
-# Python 2.x: there is no monotonic clock, so fall back to the wall clock.
-# Callers that compare two readings (elapsed time, queue entry age) are
-# therefore sensitive to the clock being stepped backwards on Python 2.
-else:
-    from time import time as monotonic
+def iteritems(d):
+    # type: (Dict[K, V]) -> Iterator[Tuple[K, V]]
+    return iter(d.items())
 
 
-def _is_py_version_higher_than(major, minor=0):
-    # type: (int, int) -> bool
-    """
-    Assert that the Python version is higher than `$maj.$min`.
-    """
-    return sys.version_info >= (major, minor)
+def iternext(iter):
+    # type: (Iterator[V]) -> V
+    return next(iter)
 
 
 def is_p3k():
     # type: () -> bool
-    """
-    Assert that Python is version 3 or higher.
-    """
-    return _is_py_version_higher_than(3)
+    return True
 
 
 def is_higher_py32():
     # type: () -> bool
-    """
-    Assert that Python is version 3.2 or higher.
-    """
-    return _is_py_version_higher_than(3, 2)
+    return True
 
 
 def is_higher_py35():
     # type: () -> bool
-    """
-    Assert that Python is version 3.5 or higher.
-    """
-    return _is_py_version_higher_than(3, 5)
+    return True
 
 
 def is_pypy():
     # type: () -> bool
     """
-    Assert that PyPy is being used (regardless of 2 or 3)
+    Assert that PyPy is being used.
     """
     return "__pypy__" in sys.builtin_module_names
 
 
 def conditional_lru_cache(func):
     # type: (Callable[..., V]) -> Callable[..., V]
-    """
-    A decorator that conditionally enables a lru_cache of size 512 if
-    the version of Python can support it (>3.2) and otherwise returns
-    the original function
-    """
-    if not is_higher_py32():
-        return func
-
     log.debug("Enabling LRU cache for function %s", func.__name__)
-
-    # pylint: disable=import-outside-toplevel
-    from functools import lru_cache
-
     return lru_cache(maxsize=512)(func)
-
-
-T = TypeVar('T')
-
-def cast(typ, val):
-    # type: (Type[T], Any) -> T
-    return val

@@ -4,9 +4,6 @@
 
 from setuptools import setup
 
-from io import open
-import sys
-
 
 def get_readme_md_contents():
     """read the contents of your README file"""
@@ -18,22 +15,15 @@ version = {}
 with open("datadog/version.py") as fp:
     exec(fp.read(), version)
 
-# `typing` package is only required for Python versions older than 3.5, but we include it here so
-# that a single wheel build can be used for all supported Python versions. Installing `typing` on
-# Python 3.5+ has no effect.
-#
-# `configparser` package is only required for Python versions older than 3 (it is included here for
-# the same reason as the `typing` package).
 install_reqs = [
     "requests>=2.6.0",
-    'typing;python_version<"3.5"',
-    'configparser<5;python_version<"3.0"',
 ]
 
 setup(
     name="datadog",
     version=version["__version__"],
     install_requires=install_reqs,
+    python_requires=">=3.9",
     tests_require=["pytest", "mock", "freezegun", "psutil"],
     packages=["datadog", "datadog.api", "datadog.dogstatsd", "datadog.threadstats", "datadog.util", "datadog.dogshell"],
     package_data={"datadog": ["py.typed"]},
@@ -62,11 +52,15 @@ setup(
     classifiers=[
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
+        "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
     ],
     # Required by Mypy when declaring PEP 561 compatibility with `py.typed`
