@@ -44,3 +44,7 @@ pip-log.txt
 .env/
 .idea/
 *.swp
+
+# Local dev
+.venv/
+doc/_build/

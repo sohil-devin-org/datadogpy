@@ -28,7 +28,16 @@ iterating; run the full set once before pushing.
 
 `tests/unit/dogstatsd/test_statsd.py::TestDogStatsd::test_dedicated_udp6_telemetry_dest` binds
 `('localhost', 0)` on an AF_INET6 socket and fails on hosts where `localhost` has no `::1` entry
-(GitHub runners are fine). It is not caused by your change unless you touched IPv6 handling.
+(GitHub runners are fine). Fix the host, not the test: `echo '::1 localhost' | sudo tee -a /etc/hosts`.
+
+`tests/integration/test_freezer.py::test_freezer` occasionally fails with
+`RuntimeError: dictionary changed size during iteration` (freezegun vs. background threads) when run
+as part of the whole `tests/integration` directory; it passes on re-run and in isolation.
+
+## End-to-end against a real Datadog org
+
+See `E2E_TESTING.md`: run the Agent in Docker with `DD_API_KEY`, then `.venv/bin/python scripts/e2e_smoke.py`
+(needs `DD_API_KEY` + `DD_APP_KEY`) sends a DogStatsD metric and an API event and prints the UI URLs to check.
 
 ## Rules
 
