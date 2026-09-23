@@ -15,7 +15,7 @@ from datadog.dogshell.common import report_errors, report_warnings
 from datadog.util.format import pretty_json
 
 
-class DashboardClient(object):
+class DashboardClient:
     @classmethod
     def setup_parser(cls, subparsers):
         # type: (argparse._SubParsersAction[argparse.ArgumentParser]) -> None

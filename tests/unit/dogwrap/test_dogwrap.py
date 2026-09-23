@@ -1,5 +1,3 @@
-# coding: utf8
-
 # Unless explicitly stated otherwise all files in this repository are licensed under the BSD-3-Clause License.
 # This product includes software developed at Datadog (https://www.datadoghq.com/).
 # Copyright 2015-Present Datadog, Inc
@@ -9,7 +7,6 @@ import os
 import tempfile
 
 from datadog.dogshell.wrap import OutputReader, build_event_body, parse_options, execute, Timeout, poll_proc
-from datadog.util.compat import is_p3k
 
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -30,24 +27,24 @@ class TestDogwrap(unittest.TestCase):
             self.assertEqual(reader.content, fwd_out.read())
 
     def test_build_event_body(self): # type: () -> None
-        # Only cmd is already unicode, the rest is decoded in the function
-        cmd = u"yö dudes"
+        # Only cmd is already str, the rest is decoded in the function
+        cmd = "yö dudes"
         returncode = 0
         stdout = b"s\xc3\xb9p\xaa"
         stderr = b"d\xc3\xa0wg\xaa"
         notifications = b"@m\xc3\xa9\xaa"
-        expected_body = u"%%%\n" \
-            u"**>>>> CMD <<<<**\n```\nyö dudes \n```\n" \
-            u"**>>>> EXIT CODE <<<<**\n\n 0\n\n\n" \
-            u"**>>>> STDOUT <<<<**\n```\nsùp\ufffd \n```\n" \
-            u"**>>>> STDERR <<<<**\n```\ndàwg\ufffd \n```\n" \
-            u"**>>>> NOTIFICATIONS <<<<**\n\n @mé\ufffd\n" \
-            u"%%%\n"
+        expected_body = "%%%\n" \
+            "**>>>> CMD <<<<**\n```\nyö dudes \n```\n" \
+            "**>>>> EXIT CODE <<<<**\n\n 0\n\n\n" \
+            "**>>>> STDOUT <<<<**\n```\nsùp\ufffd \n```\n" \
+            "**>>>> STDERR <<<<**\n```\ndàwg\ufffd \n```\n" \
+            "**>>>> NOTIFICATIONS <<<<**\n\n @mé\ufffd\n" \
+            "%%%\n"
 
         event_body = build_event_body(cmd, returncode, stdout, stderr, notifications)
         self.assertEqual(expected_body, event_body)
 
-        # notifications can be unicode already in py3, make sure we don't try decoding
+        # notifications can be str already, make sure we don't try decoding
         notifications_str = notifications.decode("utf-8", "replace")
         event_body = build_event_body(cmd, returncode, stdout, stderr, notifications_str)
         self.assertEqual(expected_body, event_body)
@@ -56,15 +53,14 @@ class TestDogwrap(unittest.TestCase):
         options, cmd = parse_options([])
         self.assertEqual(cmd, '')
 
-        # The output of parse_args is already unicode in python 3, so don't encode the input
-        arg = u'helløøééé' if is_p3k() else u'helløøééé'.encode('utf-8')
+        arg = 'helløøééé'
 
         options, cmd = parse_options(['-n', 'name', '-k', 'key', '-m', 'all', '-p', 'low', '-t', '123',
                                       '--sigterm_timeout', '456', '--sigkill_timeout', '789',
                                       '--proc_poll_interval', '1.5', '--notify_success', 'success',
                                       '--notify_error', 'error', '-b', '--tags', 'k1:v1,k2:v2',
                                       'echo', arg])
-        self.assertEqual(cmd, u'echo helløøééé')
+        self.assertEqual(cmd, 'echo helløøééé')
         self.assertEqual(options.name, 'name')
         self.assertEqual(options.api_key, 'key')
         self.assertEqual(options.submit_mode, 'all')
