@@ -11,7 +11,7 @@ from datadog.dogshell.common import report_errors, report_warnings
 
 
 # TODO IS there a test ?
-class SearchClient(object):
+class SearchClient:
     @classmethod
     def setup_parser(cls, subparsers):
         # type: (argparse._SubParsersAction[argparse.ArgumentParser]) -> None

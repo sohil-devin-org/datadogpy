@@ -18,7 +18,7 @@ from datadog.dogshell.common import report_errors, report_warnings, print_err
 from datetime import datetime
 
 
-class ScreenboardClient(object):
+class ScreenboardClient:
     @classmethod
     def setup_parser(cls, subparsers):
         # type: (argparse._SubParsersAction[argparse.ArgumentParser]) -> None

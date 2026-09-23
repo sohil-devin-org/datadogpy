@@ -4,7 +4,6 @@
 """
 Security Monitoring client - dogshell implementation.
 """
-from __future__ import print_function
 
 import argparse
 import json
@@ -50,7 +49,7 @@ def api_cmd(f):
     return wrapper
 
 
-class SecurityMonitoringClient(object):
+class SecurityMonitoringClient:
     """
     SecurityMonitoring client implementing the dogshell interface.
     """
