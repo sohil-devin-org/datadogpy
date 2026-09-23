@@ -38,7 +38,7 @@ class SecurityMonitoringSignal(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(SecurityMonitoringSignal, cls).get(signal_id, **params)
+        return super().get(signal_id, **params)
 
     @classmethod
     def get_all(cls, **params):
@@ -58,7 +58,7 @@ class SecurityMonitoringSignal(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(SecurityMonitoringSignal, cls).get_all(**params)
+        return super().get_all(**params)
 
     @classmethod
     def change_triage_state(cls, signal_id, state, **params):

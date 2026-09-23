@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type
 from datadog.api import _api_version, _max_timeouts, _backoff_period
 from datadog.api.exceptions import ClientError, ApiError, HttpBackoff, HttpTimeout, ApiNotInitialized
 from datadog.api.http_client import resolve_http_client
-from datadog.util.compat import is_p3k
 from datadog.util.format import construct_url, normalize_tags
 
 if TYPE_CHECKING:
@@ -22,7 +21,7 @@ if TYPE_CHECKING:
 log = logging.getLogger("datadog.api")
 
 
-class APIClient(object):
+class APIClient:
     """
     Datadog API client: format and submit API calls to Datadog.
     Embeds a HTTP client.
@@ -199,10 +198,7 @@ class APIClient(object):
 
             if content:
                 try:
-                    if is_p3k():
-                        response_obj = json.loads(content.decode("utf-8"))
-                    else:
-                        response_obj = json.loads(content)
+                    response_obj = json.loads(content.decode("utf-8"))
                 except ValueError:
                     raise ValueError("Invalid JSON response: {0}".format(content))
 

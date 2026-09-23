@@ -39,7 +39,7 @@ class Metric(SearchableAPIResource, SendableAPIResource, ListableAPIResource):
         except ValueError:
             raise ApiError("Parameter 'from_epoch' must be an integer")
 
-        return super(Metric, cls).get_all(**params)
+        return super().get_all(**params)
 
     @staticmethod
     def _rename_metric_type(metric):
@@ -117,7 +117,7 @@ class Metric(SearchableAPIResource, SendableAPIResource, ListableAPIResource):
         except KeyError:
             raise KeyError("'points' parameter is required")
 
-        return super(Metric, cls).send(
+        return super().send(
             attach_host_name=attach_host_name, compress_payload=compress_payload, **metrics_dict
         )
 
@@ -156,4 +156,4 @@ class Metric(SearchableAPIResource, SendableAPIResource, ListableAPIResource):
         except KeyError as e:
             raise ApiError("The parameter '{0}' is required".format(e.args[0]))
 
-        return super(Metric, cls)._search(**params)
+        return super()._search(**params)

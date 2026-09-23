@@ -45,7 +45,7 @@ class Synthetics(
 
         name = "tests"
 
-        return super(Synthetics, cls)._trigger_synthetics_class_action("GET", id=id, name=name, params=params)
+        return super()._trigger_synthetics_class_action("GET", id=id, name=name, params=params)
 
     @classmethod
     def get_all_tests(cls, **params):
@@ -62,7 +62,7 @@ class Synthetics(
 
         # API path = "synthetics/tests"
 
-        return super(Synthetics, cls).get(id="tests", params=params)
+        return super().get(id="tests", params=params)
 
     @classmethod
     def get_devices(cls, **params):
@@ -77,7 +77,7 @@ class Synthetics(
 
         name = "browser/devices"
 
-        return super(Synthetics, cls)._trigger_synthetics_class_action("GET", name=name, params=params)
+        return super()._trigger_synthetics_class_action("GET", name=name, params=params)
 
     @classmethod
     def get_locations(cls, **params):
@@ -92,7 +92,7 @@ class Synthetics(
 
         # API path = "synthetics/locations
 
-        return super(Synthetics, cls)._trigger_synthetics_class_action("GET", name=name, params=params)
+        return super()._trigger_synthetics_class_action("GET", name=name, params=params)
 
     @classmethod
     def get_results(cls, id, **params):
@@ -110,7 +110,7 @@ class Synthetics(
 
         path = "tests/{}/results".format(id)
 
-        return super(Synthetics, cls)._trigger_synthetics_class_action("GET", path, params=params)
+        return super()._trigger_synthetics_class_action("GET", path, params=params)
 
     @classmethod
     def get_result(cls, id, result_id, **params):
@@ -131,7 +131,7 @@ class Synthetics(
 
         path = "tests/{}/results/{}".format(id, result_id)
 
-        return super(Synthetics, cls)._trigger_synthetics_class_action("GET", path, params=params)
+        return super()._trigger_synthetics_class_action("GET", path, params=params)
 
     @classmethod
     def create_test(cls, **params):
@@ -169,7 +169,7 @@ class Synthetics(
 
         # API path = "synthetics/tests"
 
-        return super(Synthetics, cls).create(id="tests", **params)
+        return super().create(id="tests", **params)
 
     @classmethod
     def edit_test(cls, id, **params):
@@ -185,7 +185,7 @@ class Synthetics(
 
         # API path = "synthetics/tests/<public_test_id>"
 
-        return super(Synthetics, cls).update_synthetics(id=id, **params)
+        return super().update_synthetics(id=id, **params)
 
     @classmethod
     def start_or_pause_test(cls, id, **body):
@@ -204,7 +204,7 @@ class Synthetics(
 
         # API path = "synthetics/tests/<public_test_id>/status"
 
-        return super(Synthetics, cls).update_synthetics_items(id=id, **body)
+        return super().update_synthetics_items(id=id, **body)
 
     @classmethod
     def delete_test(cls, **body):
@@ -223,4 +223,4 @@ class Synthetics(
 
         # API path = "synthetics/tests/delete
 
-        return super(Synthetics, cls)._trigger_action("POST", name="synthetics", id="tests/delete", **body)
+        return super()._trigger_action("POST", name="synthetics", id="tests/delete", **body)

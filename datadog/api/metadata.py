@@ -27,7 +27,7 @@ class Metadata(GetableAPIResource, UpdatableAPIResource):
         if not metric_name:
             raise KeyError("'metric_name' parameter is required")
 
-        return super(Metadata, cls).get(metric_name)
+        return super().get(metric_name)
 
     @classmethod
     def update(cls, metric_name, **params):  # type: ignore[override]
@@ -65,4 +65,4 @@ class Metadata(GetableAPIResource, UpdatableAPIResource):
         if not metric_name:
             raise KeyError("'metric_name' parameter is required")
 
-        return super(Metadata, cls).update(id=metric_name, **params)
+        return super().update(id=metric_name, **params)

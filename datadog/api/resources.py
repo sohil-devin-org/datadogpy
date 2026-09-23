@@ -9,7 +9,7 @@ from typing import Any, Dict, Optional
 from datadog.api.api_client import APIClient
 
 
-class CreateableAPIResource(object):
+class CreateableAPIResource:
     """
     Creatable API Resource
     """
@@ -55,7 +55,7 @@ class CreateableAPIResource(object):
         return APIClient.submit("POST", path, api_version, body, attach_host_name=attach_host_name, **params)
 
 
-class SendableAPIResource(object):
+class SendableAPIResource:
     """
     Fork of CreateableAPIResource class with different method names
     """
@@ -101,7 +101,7 @@ class SendableAPIResource(object):
         )
 
 
-class UpdatableAPIResource(object):
+class UpdatableAPIResource:
     """
     Updatable API Resource
     """
@@ -132,7 +132,7 @@ class UpdatableAPIResource(object):
         return APIClient.submit("PUT", path, api_version, body, **params)
 
 
-class CustomUpdatableAPIResource(object):
+class CustomUpdatableAPIResource:
     """
     Updatable API Resource with custom HTTP Verb
     """
@@ -172,7 +172,7 @@ class CustomUpdatableAPIResource(object):
         return APIClient.submit(method, path, api_version, body, **params)
 
 
-class DeletableAPIResource(object):
+class DeletableAPIResource:
     """
     Deletable API Resource
     """
@@ -197,7 +197,7 @@ class DeletableAPIResource(object):
         return APIClient.submit("DELETE", path, api_version, **params)
 
 
-class GetableAPIResource(object):
+class GetableAPIResource:
     """
     Getable API Resource
     """
@@ -225,7 +225,7 @@ class GetableAPIResource(object):
         return APIClient.submit("GET", path, api_version, **params)
 
 
-class ListableAPIResource(object):
+class ListableAPIResource:
     """
     Listable API Resource
     """
@@ -249,7 +249,7 @@ class ListableAPIResource(object):
         return APIClient.submit("GET", cls._resource_name, api_version, **params)
 
 
-class ListableAPISubResource(object):
+class ListableAPISubResource:
     """
     Listable API Sub-Resource
     """
@@ -281,7 +281,7 @@ class ListableAPISubResource(object):
         return APIClient.submit("GET", path, api_version, **params)
 
 
-class AddableAPISubResource(object):
+class AddableAPISubResource:
     """
     Addable API Sub-Resource
     """
@@ -318,7 +318,7 @@ class AddableAPISubResource(object):
         return APIClient.submit("POST", path, api_version, body, **params)
 
 
-class UpdatableAPISubResource(object):
+class UpdatableAPISubResource:
     """
     Updatable API Sub-Resource
     """
@@ -355,7 +355,7 @@ class UpdatableAPISubResource(object):
         return APIClient.submit("PUT", path, api_version, body, **params)
 
 
-class DeletableAPISubResource(object):
+class DeletableAPISubResource:
     """
     Deletable API Sub-Resource
     """
@@ -392,7 +392,7 @@ class DeletableAPISubResource(object):
         return APIClient.submit("DELETE", path, api_version, body, **params)
 
 
-class SearchableAPIResource(object):
+class SearchableAPIResource:
     """
     Fork of ListableAPIResource class with different method names
     """
@@ -416,7 +416,7 @@ class SearchableAPIResource(object):
         return APIClient.submit("GET", cls._resource_name, api_version, **params)
 
 
-class ActionAPIResource(object):
+class ActionAPIResource:
     """
     Actionable API Resource
     """
@@ -490,7 +490,7 @@ class ActionAPIResource(object):
         return APIClient.submit(method, path, api_version, body_request)
 
 
-class UpdatableAPISyntheticsSubResource(object):
+class UpdatableAPISyntheticsSubResource:
     """
     Update Synthetics sub resource
     """
@@ -527,7 +527,7 @@ class UpdatableAPISyntheticsSubResource(object):
         return APIClient.submit("PUT", path, api_version, body, **params)
 
 
-class UpdatableAPISyntheticsResource(object):
+class UpdatableAPISyntheticsResource:
     """
     Update Synthetics resource
     """
@@ -558,7 +558,7 @@ class UpdatableAPISyntheticsResource(object):
         return APIClient.submit("PUT", path, api_version, body, **params)
 
 
-class ActionAPISyntheticsResource(object):
+class ActionAPISyntheticsResource:
     """
     Actionable Synthetics API Resource
     """

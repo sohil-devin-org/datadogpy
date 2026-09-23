@@ -2,8 +2,8 @@
 # This product includes software developed at Datadog (https://www.datadoghq.com/).
 # Copyright 2015-Present Datadog, Inc
 from typing import Any, Dict, Optional
+from urllib.parse import urlparse
 
-from datadog.util.compat import urlparse
 from datadog.api.resources import CreateableAPIResource, ActionAPIResource, GetableAPIResource, ListableAPIResource
 
 
@@ -34,7 +34,7 @@ class Graph(CreateableAPIResource, ActionAPIResource):
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Graph, cls).create(method="GET", **body)
+        return super().create(method="GET", **body)
 
     @classmethod
     def status(cls, snapshot_url):
@@ -53,7 +53,7 @@ class Graph(CreateableAPIResource, ActionAPIResource):
 
         snapshot_status_url = "graph/snapshot_status/{0}".format(snap_path)
 
-        return super(Graph, cls)._trigger_action("GET", snapshot_status_url)
+        return super()._trigger_action("GET", snapshot_status_url)
 
 
 class Embed(ListableAPIResource, GetableAPIResource, ActionAPIResource, CreateableAPIResource):
@@ -74,7 +74,7 @@ class Embed(ListableAPIResource, GetableAPIResource, ActionAPIResource, Createab
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Embed, cls)._trigger_class_action("GET", id=embed_id, action_name="enable")
+        return super()._trigger_class_action("GET", id=embed_id, action_name="enable")
 
     @classmethod
     def revoke(cls, embed_id):
@@ -87,4 +87,4 @@ class Embed(ListableAPIResource, GetableAPIResource, ActionAPIResource, Createab
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Embed, cls)._trigger_class_action("GET", id=embed_id, action_name="revoke")
+        return super()._trigger_class_action("GET", id=embed_id, action_name="revoke")
