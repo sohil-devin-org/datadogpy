@@ -13,24 +13,20 @@ without hindering performance.
 # stdlib
 import logging
 import os
-import sys
-
-if sys.version_info[0] >= 3:
-    from typing import Any, List, Optional  # noqa: F401
+from typing import Any, List, Optional  # noqa: F401
 
 # datadog
 from datadog import api
 from datadog.dogstatsd import DogStatsd, statsd  # noqa
 from datadog.dogstatsd.base import DEFAULT_HOST, DEFAULT_PORT
 from datadog.threadstats import ThreadStats, datadog_lambda_wrapper, lambda_metric  # noqa
-from datadog.util.compat import iteritems, NullHandler, text
 from datadog.util.hostname import get_hostname
 from datadog.version import __version__  # noqa
 
 # Loggers
-logging.getLogger("datadog.api").addHandler(NullHandler())
-logging.getLogger("datadog.dogstatsd").addHandler(NullHandler())
-logging.getLogger("datadog.threadstats").addHandler(NullHandler())
+logging.getLogger("datadog.api").addHandler(logging.NullHandler())
+logging.getLogger("datadog.dogstatsd").addHandler(logging.NullHandler())
+logging.getLogger("datadog.threadstats").addHandler(logging.NullHandler())
 
 
 def initialize(
@@ -161,7 +157,7 @@ def initialize(
                 statsd.port = DEFAULT_PORT
     statsd.close_socket()
     if statsd_namespace:
-        statsd.namespace = text(statsd_namespace)
+        statsd.namespace = str(statsd_namespace)
     if statsd_constant_tags:
         statsd.constant_tags += statsd_constant_tags
 
@@ -176,6 +172,6 @@ def initialize(
     statsd.cardinality = cardinality or os.environ.get("DATADOG_CARDINALITY", os.environ.get("DD_CARDINALITY"))
 
     # HTTP client and API options
-    for key, value in iteritems(kwargs):
+    for key, value in kwargs.items():
         attribute = "_{}".format(key)
         setattr(api, attribute, value)
