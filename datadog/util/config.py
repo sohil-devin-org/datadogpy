@@ -1,12 +1,12 @@
 # Unless explicitly stated otherwise all files in this repository are licensed under the BSD-3-Clause License.
 # This product includes software developed at Datadog (https://www.datadoghq.com/).
 # Copyright 2015-Present Datadog, Inc
+import io
 import os
 import sys
 from typing import Any, Dict, IO, Optional, List
 
 # datadog
-from datadog.util.compat import configparser, StringIO, is_p3k
 from datadog.version import __version__
 
 # CONSTANTS
@@ -39,12 +39,9 @@ def get_os():
 
 
 def skip_leading_wsp(f):
-    # type: (IO[str]) -> StringIO
+    # type: (IO[str]) -> io.StringIO
     "Works on a file, returns a file-like object"
-    if is_p3k():
-        return StringIO("\n".join(x.strip(" ") for x in f.readlines()))
-    else:
-        return StringIO("\n".join(map(str.strip, f.readlines())))
+    return io.StringIO("\n".join(x.strip(" ") for x in f.readlines()))
 
 
 def _windows_commondata_path():
@@ -116,6 +113,9 @@ def get_config(cfg_path=None, options=None):
     # type: (Optional[str], Optional[List[str]]) -> Dict[str, str]
     agentConfig = {}  # type: Dict[str, str]
 
+    # Imported lazily to keep serverless cold starts fast
+    import configparser
+
     # Config handling
     try:
         # Find the right config file
@@ -125,10 +125,7 @@ def get_config(cfg_path=None, options=None):
         config_path = get_config_path(cfg_path, os_name=get_os())
         config = configparser.ConfigParser()
         with open(config_path) as config_file:
-            if is_p3k():
-                config.read_file(skip_leading_wsp(config_file))
-            else:
-                config.readfp(skip_leading_wsp(config_file))
+            config.read_file(skip_leading_wsp(config_file))
 
         # bulk import
         for option in config.options("Main"):

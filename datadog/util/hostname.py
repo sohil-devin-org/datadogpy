@@ -7,13 +7,9 @@ import logging
 import re
 import socket
 import subprocess
-import sys
-
-if sys.version_info[:2] >= (3, 5):
-    from typing import Dict, Optional, Any, List  # noqa: F401
+from typing import Dict, Optional, Any, List  # noqa: F401
 
 # datadog
-from datadog.util.compat import url_lib, iteritems
 from datadog.util.config import get_config, get_os, CfgNotFound
 
 VALID_HOSTNAME_RFC_1123_PATTERN = re.compile(
@@ -102,7 +98,7 @@ def get_hostname(hostname_from_config):
                 hostname = unix_hostname
 
     # if we have an ec2 default hostname, see if there's an instance-id available
-    if hostname is not None and True in [hostname.lower().startswith(p) for p in [u"ip-", u"domu"]]:
+    if hostname is not None and True in [hostname.lower().startswith(p) for p in ["ip-", "domu"]]:
         instanceid = EC2.get_instance_id(config or {})
         if instanceid:
             hostname = instanceid
@@ -118,8 +114,8 @@ def get_hostname(hostname_from_config):
 
     if hostname is None:
         log.warning(
-            u"Unable to reliably determine host name. You can define one in your `hosts` file, "
-            u"or in `datadog.conf` file if you have Datadog Agent installed."
+            "Unable to reliably determine host name. You can define one in your `hosts` file, "
+            "or in `datadog.conf` file if you have Datadog Agent installed."
         )
 
     return hostname
@@ -127,6 +123,9 @@ def get_hostname(hostname_from_config):
 
 def get_ec2_instance_id():
     # type: () -> Optional[str]
+    # Imported lazily to keep serverless cold starts fast
+    import urllib.request
+
     try:
         # Remember the previous default timeout
         old_timeout = socket.getdefaulttimeout()
@@ -135,7 +134,9 @@ def get_ec2_instance_id():
         socket.setdefaulttimeout(0.25)
 
         try:
-            return url_lib.urlopen(url_lib.Request("http://169.254.169.254/latest/" "meta-data/instance-id")).read()
+            return urllib.request.urlopen(
+                urllib.request.Request("http://169.254.169.254/latest/" "meta-data/instance-id")
+            ).read()
         finally:
             # Reset the previous default timeout
             socket.setdefaulttimeout(old_timeout)
@@ -143,7 +144,7 @@ def get_ec2_instance_id():
         return socket.gethostname()
 
 
-class GCE(object):
+class GCE:
     URL = "http://169.254.169.254/computeMetadata/v1/?recursive=true"
     TIMEOUT = 0.1  # second
     SOURCE_TYPE_NAME = "google cloud platform"
@@ -160,6 +161,9 @@ class GCE(object):
             GCE.metadata = {}
             return GCE.metadata
 
+        # Imported lazily to keep serverless cold starts fast
+        import urllib.request
+
         socket_to = None
         try:
             socket_to = socket.getdefaulttimeout()
@@ -168,7 +172,7 @@ class GCE(object):
             pass
 
         try:
-            opener = url_lib.build_opener()
+            opener = urllib.request.build_opener()
             opener.addheaders = [("X-Google-Metadata-Request", "True")]
             GCE.metadata = json.loads(opener.open(GCE.URL).read().strip())
 
@@ -193,7 +197,7 @@ class GCE(object):
             return None
 
 
-class EC2(object):
+class EC2:
     """Retrieve EC2 metadata"""
 
     URL = "http://169.254.169.254/latest/meta-data"
@@ -207,6 +211,9 @@ class EC2(object):
             log.info("Instance metadata collection is disabled. Not collecting it.")
             return []
 
+        # Imported lazily to keep serverless cold starts fast
+        import urllib.request
+
         socket_to = None
         try:
             socket_to = socket.getdefaulttimeout()
@@ -215,9 +222,9 @@ class EC2(object):
             pass
 
         try:
-            iam_role = url_lib.urlopen(EC2.URL + "/iam/security-credentials").read().strip()
+            iam_role = urllib.request.urlopen(EC2.URL + "/iam/security-credentials").read().strip()
             iam_params = json.loads(
-                url_lib.urlopen(EC2.URL + "/iam/security-credentials" + "/" + str(iam_role)).read().strip()
+                urllib.request.urlopen(EC2.URL + "/iam/security-credentials" + "/" + str(iam_role)).read().strip()
             )
             from boto.ec2.connection import EC2Connection
 
@@ -228,7 +235,7 @@ class EC2(object):
             )
             instance_object = connection.get_only_instances([EC2.metadata["instance-id"]])[0]
 
-            EC2_tags = [u"%s:%s" % (tag_key, tag_value) for tag_key, tag_value in iteritems(instance_object.tags)]
+            EC2_tags = ["%s:%s" % (tag_key, tag_value) for tag_key, tag_value in instance_object.tags.items()]
 
         except Exception:
             log.exception("Problem retrieving custom EC2 tags")
@@ -267,6 +274,9 @@ class EC2(object):
             log.info("Instance metadata collection is disabled. Not collecting it.")
             return {}
 
+        # Imported lazily to keep serverless cold starts fast
+        import urllib.request
+
         socket_to = None
         try:
             socket_to = socket.getdefaulttimeout()
@@ -287,9 +297,9 @@ class EC2(object):
             "security-groups",
         ):
             try:
-                v = url_lib.urlopen(EC2.URL + "/" + str(k)).read().strip()
-                assert isinstance(v, (bytes, str)) and len(v) > 0, "%s is not a string" % v
-                EC2.metadata[k] = v.decode("utf-8") if isinstance(v, bytes) else v
+                v = urllib.request.urlopen(EC2.URL + "/" + str(k)).read().strip()
+                assert isinstance(v, bytes) and len(v) > 0, "%s is not a string" % v
+                EC2.metadata[k] = v.decode("utf-8")
             except Exception:
                 pass
 
