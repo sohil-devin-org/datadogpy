@@ -15,10 +15,9 @@ from datadog.dogshell.common import report_errors, report_warnings
 from datadog.util.format import pretty_json
 
 
-class DashboardClient(object):
+class DashboardClient:
     @classmethod
-    def setup_parser(cls, subparsers):
-        # type: (argparse._SubParsersAction[argparse.ArgumentParser]) -> None
+    def setup_parser(cls, subparsers: "argparse._SubParsersAction[argparse.ArgumentParser]") -> None:
         parser = subparsers.add_parser("dashboard", help="Create, edit, and delete dashboards")
 
         verb_parsers = parser.add_subparsers(title="Verbs", dest="verb")
@@ -90,8 +89,7 @@ class DashboardClient(object):
         delete_parser.set_defaults(func=cls._delete)
 
     @classmethod
-    def _post(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _post(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         widgets = args.widgets
@@ -120,8 +118,7 @@ class DashboardClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _update(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _update(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         widgets = args.widgets
@@ -150,8 +147,7 @@ class DashboardClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _show(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _show(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         res = api.Dashboard.get(args.dashboard_id)
@@ -164,8 +160,7 @@ class DashboardClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _delete(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _delete(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         res = api.Dashboard.delete(args.dashboard_id)
         if res is not None:
@@ -173,8 +168,7 @@ class DashboardClient(object):
             report_errors(res)
 
 
-def _json_string(str):
-    # type: (str) -> Any
+def _json_string(str: str) -> Any:
     try:
         return json.loads(str)
     except Exception:
