@@ -13,10 +13,9 @@ from datadog import api
 from datadog.dogshell.common import report_errors, report_warnings
 
 
-class ServiceCheckClient(object):
+class ServiceCheckClient:
     @classmethod
-    def setup_parser(cls, subparsers):
-        # type: (argparse._SubParsersAction[argparse.ArgumentParser]) -> None
+    def setup_parser(cls, subparsers: "argparse._SubParsersAction[argparse.ArgumentParser]") -> None:
         parser = subparsers.add_parser("service_check", help="Perform service checks")
         verb_parsers = parser.add_subparsers(title="Verbs", dest="verb")
         verb_parsers.required = True
@@ -34,8 +33,7 @@ class ServiceCheckClient(object):
         check_parser.set_defaults(func=cls._check)
 
     @classmethod
-    def _check(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _check(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         if args.tags:

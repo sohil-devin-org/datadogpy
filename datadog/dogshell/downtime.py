@@ -13,10 +13,9 @@ from datadog import api
 from datadog.dogshell.common import report_errors, report_warnings
 
 
-class DowntimeClient(object):
+class DowntimeClient:
     @classmethod
-    def setup_parser(cls, subparsers):
-        # type: (argparse._SubParsersAction[argparse.ArgumentParser]) -> None
+    def setup_parser(cls, subparsers: "argparse._SubParsersAction[argparse.ArgumentParser]") -> None:
         parser = subparsers.add_parser("downtime", help="Create, edit, and delete downtimes")
         parser.add_argument(
             "--string_ids",
@@ -66,8 +65,7 @@ class DowntimeClient(object):
         cancel_parser.set_defaults(func=cls._cancel_downtime_by_scope)
 
     @classmethod
-    def _schedule_downtime(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _schedule_downtime(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         res = api.Downtime.create(scope=args.scope, start=args.start, end=args.end, message=args.message)
@@ -79,8 +77,7 @@ class DowntimeClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _update_downtime(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _update_downtime(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         res = api.Downtime.update(
@@ -94,8 +91,7 @@ class DowntimeClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _cancel_downtime(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _cancel_downtime(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         res = api.Downtime.delete(args.downtime_id)
         if res is not None:
@@ -103,8 +99,7 @@ class DowntimeClient(object):
             report_errors(res)
 
     @classmethod
-    def _show_downtime(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _show_downtime(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         res = api.Downtime.get(args.downtime_id)
@@ -116,8 +111,7 @@ class DowntimeClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _show_all_downtime(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _show_all_downtime(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         res = api.Downtime.get_all(current_only=args.current_only)
@@ -129,8 +123,7 @@ class DowntimeClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _cancel_downtime_by_scope(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _cancel_downtime_by_scope(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         res = api.Downtime.cancel_downtime_by_scope(scope=args.scope)

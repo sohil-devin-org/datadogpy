@@ -1,5 +1,3 @@
-# coding: utf8
-
 # Unless explicitly stated otherwise all files in this repository are licensed under the BSD-3-Clause License.
 # This product includes software developed at Datadog (https://www.datadoghq.com/).
 # Copyright 2015-Present Datadog, Inc
@@ -9,14 +7,13 @@ import os
 import tempfile
 
 from datadog.dogshell.wrap import OutputReader, build_event_body, parse_options, execute, Timeout, poll_proc
-from datadog.util.compat import is_p3k
 
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
 class TestDogwrap(unittest.TestCase):
-    def test_output_reader(self): # type: () -> None
+    def test_output_reader(self) -> None:
         with open(os.path.join(HERE, "fixtures", "proc_out.txt"), 'rb') as cmd_out:
             content = cmd_out.read()
 
@@ -29,42 +26,41 @@ class TestDogwrap(unittest.TestCase):
             fwd_out.seek(0, 0)
             self.assertEqual(reader.content, fwd_out.read())
 
-    def test_build_event_body(self): # type: () -> None
-        # Only cmd is already unicode, the rest is decoded in the function
-        cmd = u"yö dudes"
+    def test_build_event_body(self) -> None:
+        # Only cmd is already str, the rest is decoded in the function
+        cmd = "yö dudes"
         returncode = 0
         stdout = b"s\xc3\xb9p\xaa"
         stderr = b"d\xc3\xa0wg\xaa"
         notifications = b"@m\xc3\xa9\xaa"
-        expected_body = u"%%%\n" \
-            u"**>>>> CMD <<<<**\n```\nyö dudes \n```\n" \
-            u"**>>>> EXIT CODE <<<<**\n\n 0\n\n\n" \
-            u"**>>>> STDOUT <<<<**\n```\nsùp\ufffd \n```\n" \
-            u"**>>>> STDERR <<<<**\n```\ndàwg\ufffd \n```\n" \
-            u"**>>>> NOTIFICATIONS <<<<**\n\n @mé\ufffd\n" \
-            u"%%%\n"
+        expected_body = "%%%\n" \
+            "**>>>> CMD <<<<**\n```\nyö dudes \n```\n" \
+            "**>>>> EXIT CODE <<<<**\n\n 0\n\n\n" \
+            "**>>>> STDOUT <<<<**\n```\nsùp\ufffd \n```\n" \
+            "**>>>> STDERR <<<<**\n```\ndàwg\ufffd \n```\n" \
+            "**>>>> NOTIFICATIONS <<<<**\n\n @mé\ufffd\n" \
+            "%%%\n"
 
         event_body = build_event_body(cmd, returncode, stdout, stderr, notifications)
         self.assertEqual(expected_body, event_body)
 
-        # notifications can be unicode already in py3, make sure we don't try decoding
+        # notifications can already be str, make sure we don't try decoding
         notifications_str = notifications.decode("utf-8", "replace")
         event_body = build_event_body(cmd, returncode, stdout, stderr, notifications_str)
         self.assertEqual(expected_body, event_body)
 
-    def test_parse_options(self): # type: () -> None
+    def test_parse_options(self) -> None:
         options, cmd = parse_options([])
         self.assertEqual(cmd, '')
 
-        # The output of parse_args is already unicode in python 3, so don't encode the input
-        arg = u'helløøééé' if is_p3k() else u'helløøééé'.encode('utf-8')
+        arg = 'helløøééé'
 
         options, cmd = parse_options(['-n', 'name', '-k', 'key', '-m', 'all', '-p', 'low', '-t', '123',
                                       '--sigterm_timeout', '456', '--sigkill_timeout', '789',
                                       '--proc_poll_interval', '1.5', '--notify_success', 'success',
                                       '--notify_error', 'error', '-b', '--tags', 'k1:v1,k2:v2',
                                       'echo', arg])
-        self.assertEqual(cmd, u'echo helløøééé')
+        self.assertEqual(cmd, 'echo helløøééé')
         self.assertEqual(options.name, 'name')
         self.assertEqual(options.api_key, 'key')
         self.assertEqual(options.submit_mode, 'all')
@@ -100,7 +96,7 @@ class TestDogwrap(unittest.TestCase):
             options, _ = parse_options([])
             self.assertEqual(options.api_key, "the_key")
 
-    def test_poll_proc(self): # type: () -> None
+    def test_poll_proc(self) -> None:
         mock_proc = mock.Mock()
         mock_proc.poll.side_effect = [None, 0]
 
@@ -108,7 +104,7 @@ class TestDogwrap(unittest.TestCase):
         self.assertEqual(return_value, 0)
         self.assertEqual(mock_proc.poll.call_count, 2)
 
-    def test_poll_timeout(self): # type: () -> None
+    def test_poll_timeout(self) -> None:
         mock_proc = mock.Mock()
         mock_proc.poll.side_effect = [None, None, None]
 
@@ -117,8 +113,7 @@ class TestDogwrap(unittest.TestCase):
 
     @mock.patch('datadog.dogshell.wrap.poll_proc')
     @mock.patch('subprocess.Popen')
-    def test_execute(self, mock_popen, mock_poll):
-        # type: (mock.Mock, mock.Mock) -> None
+    def test_execute(self, mock_popen: mock.Mock, mock_poll: mock.Mock) -> None:
         mock_proc = mock.Mock()
         mock_proc.stdout.readline.side_effect = [b'out1\n', b'']
         mock_proc.stderr.readline.side_effect = [b'err1\n', b'']
@@ -137,8 +132,7 @@ class TestDogwrap(unittest.TestCase):
 
     @mock.patch('datadog.dogshell.wrap.poll_proc')
     @mock.patch('subprocess.Popen')
-    def test_execute_exit_code(self, mock_popen, mock_poll):
-        # type: (mock.Mock, mock.Mock) -> None
+    def test_execute_exit_code(self, mock_popen: mock.Mock, mock_poll: mock.Mock) -> None:
         mock_proc = mock.Mock()
         mock_proc.stdout.readline.side_effect = [b'out1\n', b'out2\n', b'']
         mock_proc.stderr.readline.side_effect = [b'err1\n', b'']
@@ -157,8 +151,7 @@ class TestDogwrap(unittest.TestCase):
 
     @mock.patch('datadog.dogshell.wrap.poll_proc')
     @mock.patch('subprocess.Popen')
-    def test_execute_cmd_timeout(self, mock_popen, mock_poll):
-        # type: (mock.Mock, mock.Mock) -> None
+    def test_execute_cmd_timeout(self, mock_popen: mock.Mock, mock_poll: mock.Mock) -> None:
         mock_proc = mock.Mock()
         mock_proc.stdout.readline.side_effect = [b'out1\n', b'out2\n', b'']
         mock_proc.stderr.readline.side_effect = [b'err1\n', b'']
@@ -180,8 +173,7 @@ class TestDogwrap(unittest.TestCase):
 
     @mock.patch('datadog.dogshell.wrap.poll_proc')
     @mock.patch('subprocess.Popen')
-    def test_execute_sigterm_timeout(self, mock_popen, mock_poll):
-        # type: (mock.Mock, mock.Mock) -> None
+    def test_execute_sigterm_timeout(self, mock_popen: mock.Mock, mock_poll: mock.Mock) -> None:
         mock_proc = mock.Mock()
         mock_proc.stdout.readline.side_effect = [b'out1\n', b'out2\n', b'']
         mock_proc.stderr.readline.side_effect = [b'err1\n', b'']
@@ -204,8 +196,7 @@ class TestDogwrap(unittest.TestCase):
 
     @mock.patch('datadog.dogshell.wrap.poll_proc')
     @mock.patch('subprocess.Popen')
-    def test_execute_sigkill_timeout(self, mock_popen, mock_poll):
-        # type: (mock.Mock, mock.Mock) -> None
+    def test_execute_sigkill_timeout(self, mock_popen: mock.Mock, mock_poll: mock.Mock) -> None:
         mock_proc = mock.Mock()
         mock_proc.stdout.readline.side_effect = [b'out1\n', b'out2\n', b'']
         mock_proc.stderr.readline.side_effect = [b'err1\n', b'']
@@ -228,8 +219,7 @@ class TestDogwrap(unittest.TestCase):
 
     @mock.patch('datadog.dogshell.wrap.poll_proc')
     @mock.patch('subprocess.Popen')
-    def test_execute_oserror(self, mock_popen, mock_poll):
-        # type: (mock.Mock, mock.Mock) -> None
+    def test_execute_oserror(self, mock_popen: mock.Mock, mock_poll: mock.Mock) -> None:
         mock_proc = mock.Mock()
         mock_proc.stdout.readline.side_effect = [b'out1\n', b'out2\n', b'']
         mock_proc.stderr.readline.side_effect = [b'err1\n', b'']
@@ -250,8 +240,7 @@ class TestDogwrap(unittest.TestCase):
         mock_proc.kill.assert_called_once()
 
     @mock.patch('subprocess.Popen')
-    def test_execute_popen_fail(self, mock_popen):
-        # type: (mock.Mock) -> None
+    def test_execute_popen_fail(self, mock_popen: mock.Mock) -> None:
         mock_popen.side_effect = ValueError('Bad things')
 
         with self.assertRaises(ValueError):
