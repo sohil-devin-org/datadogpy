@@ -12,7 +12,7 @@ from datadog.threadstats.aws_lambda import _lambda_stats
 TOTAL_NUMBER_OF_THREADS = 1000
 
 
-class MemoryReporter(object):
+class MemoryReporter:
     """ A reporting class that reports to memory for testing. """
 
     def __init__(self):
