@@ -720,9 +720,7 @@ class DogStatsd:
 
         Applications should call stop() before exiting to make sure all pending payloads are sent.
 
-        Compatible with os.fork() starting with Python 3.7. On earlier versions, compatible if applications
-        arrange to call pre_fork(), post_fork_parent() and post_fork_child() module functions around calls
-        to os.fork().
+        Compatible with os.fork().
 
         :param sender_queue_size: Set the maximum number of packets to queue for the sender.
             How many packets to queue before blocking or dropping the packet if the packet queue is already full.
