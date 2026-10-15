@@ -1,24 +1,18 @@
 from threading import Lock
 import random
-import sys
+from typing import Any, Dict, List, Optional  # noqa: F401
 
-if sys.version_info[:2] >= (3, 5):
-    from typing import Any, Dict, List, Optional, TYPE_CHECKING  # noqa: F401
-
-    if TYPE_CHECKING:
-        from datadog.dogstatsd.max_sample_metric import MaxSampleMetric
-        from datadog.dogstatsd.metrics import MetricAggregator
+from datadog.dogstatsd.max_sample_metric import MaxSampleMetric
+from datadog.dogstatsd.metrics import MetricAggregator
 
 
 class MaxSampleMetricContexts:
-    def __init__(self, max_sample_metric_type):
-        # type: (Any) -> None
+    def __init__(self, max_sample_metric_type: Any) -> None:
         self.lock = Lock()
-        self.values = {}  # type: Dict[str, MaxSampleMetric]
+        self.values: Dict[str, MaxSampleMetric] = {}
         self.max_sample_metric_type = max_sample_metric_type
 
-    def flush(self):
-        # type: () -> List[List[MetricAggregator]]
+    def flush(self) -> List[List[MetricAggregator]]:
         """Flush the metrics and reset the stored values."""
         with self.lock:
             temp = self.values
@@ -26,8 +20,14 @@ class MaxSampleMetricContexts:
 
         return [metric.flush() for metric in temp.values()]
 
-    def sample(self, name, value, tags, rate, context_key, max_samples_per_context, cardinality=None):
-        # type: (str, Any, Optional[List[str]], float, str, int, Optional[str]) -> None
+    def sample(self,
+               name: str,
+               value: Any,
+               tags: Optional[List[str]],
+               rate: float,
+               context_key: str,
+               max_samples_per_context: int,
+               cardinality: Optional[str] = None) -> None:
         """Sample a metric and store it if it meets the criteria."""
         keeping_sample = self.should_sample(rate)
         with self.lock:
@@ -44,8 +44,7 @@ class MaxSampleMetricContexts:
             metric.skip_sample()
         metric.lock.release()
 
-    def should_sample(self, rate):
-        # type: (float) -> bool
+    def should_sample(self, rate: float) -> bool:
         """Determine if a sample should be kept based on the specified rate."""
         if rate >= 1:
             return True

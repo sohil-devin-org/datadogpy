@@ -12,8 +12,7 @@ import time
 import psutil
 
 
-# pylint: disable=useless-object-inheritance
-class SysInfoObserver(object):
+class SysInfoObserver:
     """
     SysInfoObserver collects timed CPU and memory usage stats in a separate
     thread about the current process.
