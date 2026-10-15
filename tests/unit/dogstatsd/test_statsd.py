@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=line-too-long,too-many-public-methods
 
 # Unless explicitly stated otherwise all files in this repository are licensed under the BSD-3-Clause License.
@@ -20,6 +19,7 @@ import socket
 import tempfile
 import threading
 import time
+from time import monotonic as sender_queue_clock
 import unittest
 import warnings
 
@@ -33,14 +33,12 @@ from datadog import initialize, statsd
 from datadog import __version__ as version
 from datadog.dogstatsd.base import DEFAULT_BUFFERING_FLUSH_INTERVAL, DEFAULT_HOST, DEFAULT_PORT, DogStatsd, MIN_SEND_BUFFER_SIZE, PENDING_PAYLOAD_EXPIRY_SECONDS, PendingPayload, SenderQueue, Stop, UDP_OPTIMAL_PAYLOAD_LENGTH, SENDER_RETRY_MAX_BACKOFF, UDS_OPTIMAL_PAYLOAD_LENGTH
 from datadog.dogstatsd.sender_queue import is_replay_safe, payload_text
-from datadog.util.compat import monotonic as sender_queue_clock
 from datadog.dogstatsd.context import TimedContextManagerDecorator
-from datadog.util.compat import is_higher_py35, is_p3k
 from tests.util.contextmanagers import preserve_environment_variable, EnvVars
 from tests.unit.dogstatsd.fixtures import load_fixtures
 
 
-class FakeSocket(object):
+class FakeSocket:
     """ A fake socket for testing. """
 
     FLUSH_GRACE_PERIOD = 0.2
@@ -62,10 +60,7 @@ class FakeSocket(object):
         self.send(payload)
 
     def send(self, payload):
-        if is_p3k():
-            assert isinstance(payload, bytes)
-        else:
-            assert isinstance(payload, str)
+        assert isinstance(payload, bytes)
 
         self.payloads.append(payload)
 
@@ -108,7 +103,7 @@ class FakeSocket(object):
 
 class BrokenSocket(FakeSocket):
     def __init__(self, error_number=None):
-        super(BrokenSocket, self).__init__()
+        super().__init__()
 
         self.error_number = error_number
 
@@ -123,7 +118,7 @@ class BrokenSocket(FakeSocket):
 class OverflownSocket(BrokenSocket):
 
     def __init__(self):
-        super(OverflownSocket, self).__init__(errno.EAGAIN)
+        super().__init__(errno.EAGAIN)
 
 
 def telemetry_metrics(metrics=1, events=0, service_checks=0, bytes_sent=0, bytes_dropped_writer=0, packets_sent=1, packets_dropped_writer=0, transport="udp", tags="", bytes_dropped_queue=0, packets_dropped_queue=0, bytes_dropped_expired=0, packets_dropped_expired=0):
@@ -167,7 +162,7 @@ class TestDogStatsd(unittest.TestCase):
 
         # Mock the proc filesystem
         route_data = load_fixtures('route')
-        self._procfs_mock = patch('datadog.util.compat.builtins.open', mock_open())
+        self._procfs_mock = patch('builtins.open', mock_open())
         self._procfs_mock.start().return_value.readlines.return_value = route_data.split("\n")
 
     def tearDown(self):
@@ -604,8 +599,8 @@ class TestDogStatsd(unittest.TestCase):
         self.assert_equal_telemetry('gt:123.4|g|#country:china,age:45,blue\n', self.recv(2))
 
     def test_tagged_counter(self):
-        self.statsd.increment('ct', tags=[u'country:españa', 'red'])
-        self.assert_equal_telemetry(u'ct:1|c|#country:españa,red\n', self.recv(2))
+        self.statsd.increment('ct', tags=['country:españa', 'red'])
+        self.assert_equal_telemetry('ct:1|c|#country:españa,red\n', self.recv(2))
 
     def test_tagged_histogram(self):
         self.statsd.histogram('h', 1, tags=['red'])
@@ -670,12 +665,12 @@ class TestDogStatsd(unittest.TestCase):
     def test_event(self):
         self.statsd.event(
             'Title',
-            u'L1\nL2',
+            'L1\nL2',
             priority='low',
             date_happened=1375296969,
             cardinality="orchestrator",
         )
-        event2 = u'_e{5,6}:Title|L1\\nL2|d:1375296969|p:low|card:orchestrator\n'
+        event2 = '_e{5,6}:Title|L1\\nL2|d:1375296969|p:low|card:orchestrator\n'
         self.assert_equal_telemetry(
             event2,
             self.recv(2),
@@ -688,9 +683,9 @@ class TestDogStatsd(unittest.TestCase):
 
         self.statsd._reset_telemetry()
 
-        self.statsd.event('Title', u'♬ †øU †øU ¥ºu T0µ ♪',
+        self.statsd.event('Title', '♬ †øU †øU ¥ºu T0µ ♪',
                           aggregation_key='key', tags=['t1', 't2:v2'])
-        event3 = u'_e{5,32}:Title|♬ †øU †øU ¥ºu T0µ ♪|k:key|#t1,t2:v2\n'
+        event3 = '_e{5,32}:Title|♬ †øU †øU ¥ºu T0µ ♪|k:key|#t1,t2:v2\n'
         self.assert_equal_telemetry(
             event3,
             self.recv(2, reset_wait=True),
@@ -705,8 +700,8 @@ class TestDogStatsd(unittest.TestCase):
         self.statsd.event(
                 'my.prefix.Delivery - Daily Settlement Summary Report Delivery — Invoice Cloud succeeded',
                 'Delivered — destination.csv')
-        event = u'_e{89,29}:my.prefix.Delivery - Daily Settlement Summary Report Delivery — Invoice Cloud succeeded|' + \
-            u'Delivered — destination.csv\n'
+        event = '_e{89,29}:my.prefix.Delivery - Daily Settlement Summary Report Delivery — Invoice Cloud succeeded|' + \
+            'Delivered — destination.csv\n'
         self.assert_equal_telemetry(
             event,
             self.recv(2),
@@ -719,10 +714,22 @@ class TestDogStatsd(unittest.TestCase):
 
         self.statsd._reset_telemetry()
 
+    def test_non_ascii_event_and_service_check_exact_bytes(self):
+        # Non-ASCII text must reach the socket as exactly these UTF-8 bytes,
+        # with event title/message lengths counted in encoded bytes.
+        self.statsd.event('T\u00edtle', '\u266c msg', tags=['t\u00e1g:v'])
+        self.statsd.service_check('check.\u00f1', self.statsd.OK, message='m\u00dfg')
+
+        payloads = list(self.statsd.socket.payloads)
+        self.assertIn(b'_e{6,7}:T\xc3\xadtle|\xe2\x99\xac msg|#t\xc3\xa1g:v\n', payloads)
+        self.assertIn(b'_sc|check.\xc3\xb1|0|m:m\xc3\x9fg\n', payloads)
+
+        self.statsd._reset_telemetry()
+
     # Positional arg names should match threadstats
     def test_event_matching_signature(self):
         self.statsd.event(title="foo", message="bar1")
-        event = u'_e{3,4}:foo|bar1\n'
+        event = '_e{3,4}:foo|bar1\n'
         self.assert_equal_telemetry(
             event,
             self.recv(2),
@@ -737,8 +744,8 @@ class TestDogStatsd(unittest.TestCase):
 
     def test_event_constant_tags(self):
         self.statsd.constant_tags = ['bar:baz', 'foo']
-        self.statsd.event('Title', u'L1\nL2', priority='low', date_happened=1375296969)
-        event = u'_e{5,6}:Title|L1\\nL2|d:1375296969|p:low|#bar:baz,foo\n'
+        self.statsd.event('Title', 'L1\nL2', priority='low', date_happened=1375296969)
+        event = '_e{5,6}:Title|L1\\nL2|d:1375296969|p:low|#bar:baz,foo\n'
         self.assert_equal_telemetry(
             event,
             self.recv(2),
@@ -752,9 +759,9 @@ class TestDogStatsd(unittest.TestCase):
 
         self.statsd._reset_telemetry()
 
-        self.statsd.event('Title', u'♬ †øU †øU ¥ºu T0µ ♪',
+        self.statsd.event('Title', '♬ †øU †øU ¥ºu T0µ ♪',
                           aggregation_key='key', tags=['t1', 't2:v2'])
-        event = u'_e{5,32}:Title|♬ †øU †øU ¥ºu T0µ ♪|k:key|#t1,t2:v2,bar:baz,foo\n'
+        event = '_e{5,32}:Title|♬ †øU †øU ¥ºu T0µ ♪|k:key|#t1,t2:v2,bar:baz,foo\n'
         self.assert_equal_telemetry(
             event,
             self.recv(2, reset_wait=True),
@@ -787,10 +794,10 @@ class TestDogStatsd(unittest.TestCase):
         self.statsd.service_check(
             'my_check.name', self.statsd.WARNING,
             tags=['key1:val1', 'key2:val2'], timestamp=now,
-            hostname='i-abcd1234', message=u"♬ †øU \n†øU ¥ºu|m: T0µ ♪",
+            hostname='i-abcd1234', message="♬ †øU \n†øU ¥ºu|m: T0µ ♪",
             cardinality="low",
         )
-        check = u'_sc|my_check.name|{0}|d:{1}|h:i-abcd1234|#key1:val1,key2:val2|m:{2}|card:low\n'.format(self.statsd.WARNING, now, u'♬ †øU \\n†øU ¥ºu|m\\: T0µ ♪')
+        check = '_sc|my_check.name|{0}|d:{1}|h:i-abcd1234|#key1:val1,key2:val2|m:{2}|card:low\n'.format(self.statsd.WARNING, now, '♬ †øU \\n†øU ¥ºu|m\\: T0µ ♪')
         self.assert_equal_telemetry(
             check,
             self.recv(2),
@@ -807,8 +814,8 @@ class TestDogStatsd(unittest.TestCase):
         self.statsd.service_check(
             'my_check.name', self.statsd.WARNING,
             timestamp=now,
-            hostname='i-abcd1234', message=u"♬ †øU \n†øU ¥ºu|m: T0µ ♪")
-        check = u'_sc|my_check.name|{0}|d:{1}|h:i-abcd1234|#bar:baz,foo|m:{2}'.format(self.statsd.WARNING, now, u"♬ †øU \\n†øU ¥ºu|m\\: T0µ ♪\n")
+            hostname='i-abcd1234', message="♬ †øU \n†øU ¥ºu|m: T0µ ♪")
+        check = '_sc|my_check.name|{0}|d:{1}|h:i-abcd1234|#bar:baz,foo|m:{2}'.format(self.statsd.WARNING, now, "♬ †øU \\n†øU ¥ºu|m\\: T0µ ♪\n")
         self.assert_equal_telemetry(
             check,
             self.recv(2, True),
@@ -825,8 +832,8 @@ class TestDogStatsd(unittest.TestCase):
         self.statsd.service_check(
             'my_check.name', self.statsd.WARNING,
             tags=['key1:val1', 'key2:val2'], timestamp=now,
-            hostname='i-abcd1234', message=u"♬ †øU \n†øU ¥ºu|m: T0µ ♪")
-        check = u'_sc|my_check.name|{0}|d:{1}|h:i-abcd1234|#key1:val1,key2:val2,bar:baz,foo|m:{2}'.format(self.statsd.WARNING, now, u"♬ †øU \\n†øU ¥ºu|m\\: T0µ ♪\n")
+            hostname='i-abcd1234', message="♬ †øU \n†øU ¥ºu|m: T0µ ♪")
+        check = '_sc|my_check.name|{0}|d:{1}|h:i-abcd1234|#key1:val1,key2:val2,bar:baz,foo|m:{2}'.format(self.statsd.WARNING, now, "♬ †øU \\n†øU ¥ºu|m\\: T0µ ♪\n")
         self.assert_equal_telemetry(
             check,
             self.recv(2, True),
@@ -1388,29 +1395,21 @@ class TestDogStatsd(unittest.TestCase):
         self.assertEqual('tests.unit.dogstatsd.test_statsd.func', name)
         self.assert_almost_equal(0.5, float(value), 0.1)
 
-    @unittest.skipIf(not is_higher_py35(), reason="Coroutines are supported on Python 3.5 or higher.")
     def test_timed_coroutine(self):
         """
         Measure the distribution of a coroutine function's run time.
-
-        Warning: Python > 3.5 only.
         """
         import asyncio
 
-        source = """
-@self.statsd.timed('timed.test')
-async def print_foo():
-    "docstring"
-    import time
-    time.sleep(0.5)
-    print("foo")
-        """
-        ns = locals()
-        exec(source, {}, ns)
+        @self.statsd.timed('timed.test')
+        async def print_foo():
+            "docstring"
+            time.sleep(0.5)
+            print("foo")
 
         loop = asyncio.new_event_loop()
         try:
-            loop.run_until_complete(ns['print_foo']())
+            loop.run_until_complete(print_foo())
         finally:
             loop.close()
 
@@ -1546,10 +1545,10 @@ async def print_foo():
         fake_socket = FakeSocket(socket_kind=socket_kind)
         dogstatsd.socket = fake_socket
 
-        dogstatsd.increment(u'page.®views®')
+        dogstatsd.increment('page.®views®')
         self.assertIsNone(fake_socket.recv(no_wait=True))
         dogstatsd.flush()
-        self.assert_equal_telemetry(u'page.®views®:1|c\n', fake_socket.recv(2))
+        self.assert_equal_telemetry('page.®views®:1|c\n', fake_socket.recv(2))
 
     def test_flush_interval_dgram(self):
         self._test_flush_interval(socket.SOCK_DGRAM)
@@ -1562,7 +1561,7 @@ async def print_foo():
         fake_socket = FakeSocket(socket_kind=socket_kind)
         dogstatsd.socket = fake_socket
 
-        dogstatsd.increment(u'page.®views®')
+        dogstatsd.increment('page.®views®')
         self.assertIsNone(fake_socket.recv(no_wait=True))
 
         time.sleep(0.3)
@@ -1570,7 +1569,7 @@ async def print_foo():
 
         time.sleep(1)
         self.assert_equal_telemetry(
-            u'page.®views®:1|c\n',
+            'page.®views®:1|c\n',
             fake_socket.recv(2, no_wait=True)
         )
     
@@ -1585,11 +1584,11 @@ async def print_foo():
         fake_socket = FakeSocket(socket_kind=socket_kind)
         dogstatsd.socket = fake_socket
         for _ in range(10):
-            dogstatsd.increment(u'test.ÀggregÀtion_and_buffering')
+            dogstatsd.increment('test.ÀggregÀtion_and_buffering')
         self.assertIsNone(fake_socket.recv(no_wait=True))
         dogstatsd.flush_aggregated_metrics()
         dogstatsd.flush()
-        self.assert_equal_telemetry(u'test.ÀggregÀtion_and_buffering:10|c\n', fake_socket.recv(2))
+        self.assert_equal_telemetry('test.ÀggregÀtion_and_buffering:10|c\n', fake_socket.recv(2))
 
     def test_aggregation_buffering_simultaneously_with_interval_dgram(self):
         self._test_aggregation_buffering_simultaneously_with_interval(socket.SOCK_DGRAM)
@@ -2593,7 +2592,7 @@ async def print_foo():
             priority="low",
             date_happened=1375296969,
         )
-        event2 = u"_e{5,6}:Title|L1\\nL2|d:1375296969|p:low|c:ci-fake-container-id\n"
+        event2 = "_e{5,6}:Title|L1\\nL2|d:1375296969|p:low|c:ci-fake-container-id\n"
         self.assert_equal_telemetry(
             event2,
             self.recv(2),
@@ -2606,8 +2605,8 @@ async def print_foo():
 
         self.statsd._reset_telemetry()
 
-        self.statsd.event("Title", u"♬ †øU †øU ¥ºu T0µ ♪", aggregation_key="key", tags=["t1", "t2:v2"])
-        event3 = u"_e{5,32}:Title|♬ †øU †øU ¥ºu T0µ ♪|k:key|#t1,t2:v2|c:ci-fake-container-id\n"
+        self.statsd.event("Title", "♬ †øU †øU ¥ºu T0µ ♪", aggregation_key="key", tags=["t1", "t2:v2"])
+        event3 = "_e{5,32}:Title|♬ †øU †øU ¥ºu T0µ ♪|k:key|#t1,t2:v2|c:ci-fake-container-id\n"
         self.assert_equal_telemetry(
             event3,
             self.recv(2, reset_wait=True),
@@ -2627,11 +2626,11 @@ async def print_foo():
             self.statsd.WARNING,
             tags=["key1:val1", "key2:val2"],
             timestamp=now,
-            hostname=u"i-abcd1234",
-            message=u"♬ †øU \n†øU ¥ºu|m: T0µ ♪",
+            hostname="i-abcd1234",
+            message="♬ †øU \n†øU ¥ºu|m: T0µ ♪",
         )
-        check = u'_sc|my_check.name|{0}|d:{1}|h:i-abcd1234|#key1:val1,key2:val2|m:{2}|c:ci-fake-container-id\n'.format(
-            self.statsd.WARNING, now, u'♬ †øU \\n†øU ¥ºu|m\\: T0µ ♪'
+        check = '_sc|my_check.name|{0}|d:{1}|h:i-abcd1234|#key1:val1,key2:val2|m:{2}|c:ci-fake-container-id\n'.format(
+            self.statsd.WARNING, now, '♬ †øU \\n†øU ¥ºu|m\\: T0µ ♪'
         )
         self.assert_equal_telemetry(
             check,
@@ -2968,7 +2967,7 @@ async def print_foo():
         entered_send = threading.Event()
         wedged = statsd._sender_thread
 
-        class BlockingSocket(object):
+        class BlockingSocket:
             def send(self, data):
                 entered_send.set()
                 release.wait(30.0)
@@ -3883,10 +3882,9 @@ async def print_foo():
             "an expiring payload needs a real timestamp to be judged against",
         )
 
-        # Deliberately not asserting a concrete string type here: on Python 2
-        # the serialized packet is unicode, not str. What matters is that the
-        # entry is the bare payload rather than a wrapper, which is exactly
-        # what is_replay_safe()/payload_text() key off.
+        # What matters is that the entry is the bare payload rather than a
+        # wrapper, which is exactly what is_replay_safe()/payload_text() key off.
+        self.assertIsInstance(replay_safe, str)
         self.assertNotIsInstance(replay_safe, PendingPayload)
         self.assertTrue(is_replay_safe(replay_safe))
         self.assertIs(payload_text(replay_safe), replay_safe)
