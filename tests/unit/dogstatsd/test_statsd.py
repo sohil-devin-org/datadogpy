@@ -200,7 +200,7 @@ class TestDogStatsd(unittest.TestCase):
 
     def assert_equal_telemetry(self, expected_payload, actual_payload, telemetry=None, **kwargs):
         if telemetry is None:
-            telemetry = telemetry_metrics(bytes_sent=len(expected_payload), **kwargs)
+            telemetry = telemetry_metrics(bytes_sent=len(expected_payload.encode("utf-8")), **kwargs)
 
         if expected_payload:
             expected_payload = "\n".join([expected_payload, telemetry])
@@ -682,7 +682,7 @@ class TestDogStatsd(unittest.TestCase):
             telemetry=telemetry_metrics(
                 metrics=0,
                 events=1,
-                bytes_sent=len(event2),
+                bytes_sent=len(event2.encode("utf-8")),
             ),
         )
 
@@ -697,7 +697,7 @@ class TestDogStatsd(unittest.TestCase):
             telemetry=telemetry_metrics(
                 metrics=0,
                 events=1,
-                bytes_sent=len(event3),
+                bytes_sent=len(event3.encode("utf-8")),
             ),
         )
 
@@ -713,7 +713,7 @@ class TestDogStatsd(unittest.TestCase):
             telemetry=telemetry_metrics(
                 metrics=0,
                 events=1,
-                bytes_sent=len(event),
+                bytes_sent=len(event.encode("utf-8")),
             ),
         )
 
@@ -729,7 +729,7 @@ class TestDogStatsd(unittest.TestCase):
             telemetry=telemetry_metrics(
                 metrics=0,
                 events=1,
-                bytes_sent=len(event),
+                bytes_sent=len(event.encode("utf-8")),
             ),
         )
 
@@ -746,7 +746,7 @@ class TestDogStatsd(unittest.TestCase):
                 metrics=0,
                 events=1,
                 tags="bar:baz,foo",
-                bytes_sent=len(event),
+                bytes_sent=len(event.encode("utf-8")),
             ),
         )
 
@@ -762,7 +762,7 @@ class TestDogStatsd(unittest.TestCase):
                 metrics=0,
                 events=1,
                 tags="bar:baz,foo",
-                bytes_sent=len(event),
+                bytes_sent=len(event.encode("utf-8")),
             ),
         )
 
@@ -797,7 +797,7 @@ class TestDogStatsd(unittest.TestCase):
             telemetry=telemetry_metrics(
                 metrics=0,
                 service_checks=1,
-                bytes_sent=len(check),
+                bytes_sent=len(check.encode("utf-8")),
             ),
         )
 
@@ -816,7 +816,7 @@ class TestDogStatsd(unittest.TestCase):
                 metrics=0,
                 service_checks=1,
                 tags="bar:baz,foo",
-                bytes_sent=len(check),
+                bytes_sent=len(check.encode("utf-8")),
             ),
         )
 
@@ -834,7 +834,7 @@ class TestDogStatsd(unittest.TestCase):
                 metrics=0,
                 service_checks=1,
                 tags="bar:baz,foo",
-                bytes_sent=len(check),
+                bytes_sent=len(check.encode("utf-8")),
             ),
         )
 
@@ -1131,6 +1131,65 @@ class TestDogStatsd(unittest.TestCase):
             mock_log.error.assert_not_called()
             calls = [call("Socket buffer full: %s, dropping the packet", mock.ANY)]
             mock_log.debug.assert_has_calls(calls * 2)
+
+    def test_telemetry_bytes_sent_counts_encoded_bytes(self):
+        self.statsd.gauge("page.views", 1, tags=[u"city:montr\u00e9al", u"region:\u6771\u4eac"])
+        metric = u"page.views:1|g|#city:montr\u00e9al,region:\u6771\u4eac\n"
+        self.assertEqual(len(metric), 40)
+        self.assertEqual(len(metric.encode("utf-8")), 45)
+        self.assert_equal_telemetry(
+            metric,
+            self.recv(2),
+            telemetry=telemetry_metrics(bytes_sent=45),
+        )
+
+    def test_telemetry_packet_bytes_sent_counts_encoded_bytes(self):
+        statsd = DogStatsd(telemetry_min_flush_interval=0, constant_tags=[u"region:\u6771\u4eac"])
+        statsd.socket = FakeSocket()
+        statsd._reset_telemetry()
+
+        statsd.gauge("page.views", 1)
+        self.assertEqual(len(statsd.socket.payloads), 2)
+        telemetry = statsd.socket.payloads[1]
+
+        # Bytes of the telemetry packet itself are carried into the next flush.
+        self.assertEqual(statsd.bytes_sent, len(telemetry))
+        self.assertNotEqual(statsd.bytes_sent, len(telemetry.decode("utf-8")))
+
+    def test_telemetry_bytes_dropped_writer_counts_encoded_bytes(self):
+        statsd = DogStatsd(telemetry_min_flush_interval=3600)
+        statsd.socket = BrokenSocket()
+        statsd._reset_telemetry()
+
+        statsd.gauge("page.views", 1, tags=[u"city:montr\u00e9al", u"region:\u6771\u4eac"])
+
+        self.assertEqual(statsd.packets_dropped_writer, 1)
+        self.assertEqual(statsd.bytes_dropped_writer, 45)
+
+    def test_telemetry_packet_bytes_dropped_writer_counts_encoded_bytes(self):
+        statsd = DogStatsd(telemetry_min_flush_interval=0, constant_tags=[u"region:\u6771\u4eac"])
+        broken_socket = BrokenSocket()
+        statsd.get_socket = lambda telemetry=False: broken_socket
+        statsd._reset_telemetry()
+
+        flushed = []
+        flush_telemetry = statsd._flush_telemetry
+
+        def capture_telemetry():
+            flushed.append(flush_telemetry())
+            return flushed[-1]
+        statsd._flush_telemetry = capture_telemetry
+
+        with mock.patch("datadog.dogstatsd.base.log"):
+            statsd.gauge("page.views", 1)
+
+        # One dropped metric packet plus the dropped telemetry packet built after it.
+        metric_bytes = len(u"page.views:1|g|#region:\u6771\u4eac\n".encode("utf-8"))
+        self.assertEqual(len(flushed), 1)
+        telemetry_bytes = len(flushed[0].encode("utf-8"))
+        self.assertNotEqual(telemetry_bytes, len(flushed[0]))
+        self.assertEqual(statsd.packets_dropped_writer, 2)
+        self.assertEqual(statsd.bytes_dropped_writer, metric_bytes + telemetry_bytes)
 
     @patch('socket.socket')
     def test_uds_socket_ensures_min_receive_buffer(self, mock_socket_create):
@@ -2600,7 +2659,7 @@ async def print_foo():
             telemetry=telemetry_metrics(
                 metrics=0,
                 events=1,
-                bytes_sent=len(event2),
+                bytes_sent=len(event2.encode("utf-8")),
             ),
         )
 
@@ -2614,7 +2673,7 @@ async def print_foo():
             telemetry=telemetry_metrics(
                 metrics=0,
                 events=1,
-                bytes_sent=len(event3),
+                bytes_sent=len(event3.encode("utf-8")),
             ),
         )
         self.statsd._container_id = None
@@ -2639,7 +2698,7 @@ async def print_foo():
             telemetry=telemetry_metrics(
                 metrics=0,
                 service_checks=1,
-                bytes_sent=len(check),
+                bytes_sent=len(check.encode("utf-8")),
             ),
         )
         self.statsd._container_id = None
