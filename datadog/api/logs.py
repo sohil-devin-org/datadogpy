@@ -15,8 +15,7 @@ class Logs(CreateableAPIResource):
     _resource_name = "logs-queries"
 
     @classmethod
-    def list(cls, data):
-        # type: (Any) -> Any
+    def list(cls, data: Any) -> Any:
         path = "{resource_name}/list".format(
             resource_name=cls._resource_name,
         )

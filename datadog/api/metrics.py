@@ -14,15 +14,14 @@ class Metric(SearchableAPIResource, SendableAPIResource, ListableAPIResource):
     A wrapper around Metric HTTP API
     """
 
-    _resource_name = ""  # type: str
+    _resource_name: str = ""
 
     _METRIC_QUERY_ENDPOINT = "query"
     _METRIC_SUBMIT_ENDPOINT = "series"
     _METRIC_LIST_ENDPOINT = "metrics"
 
     @classmethod
-    def list(cls, from_epoch):
-        # type: (Any) -> Any
+    def list(cls, from_epoch: Any) -> Any:
         """
         Get a list of active metrics since a given time (Unix Epoc)
 
@@ -39,11 +38,10 @@ class Metric(SearchableAPIResource, SendableAPIResource, ListableAPIResource):
         except ValueError:
             raise ApiError("Parameter 'from_epoch' must be an integer")
 
-        return super(Metric, cls).get_all(**params)
+        return super().get_all(**params)
 
     @staticmethod
-    def _rename_metric_type(metric):
-        # type: (Dict[str, Any]) -> None
+    def _rename_metric_type(metric: Dict[str, Any]) -> None:
         """
         FIXME DROPME in 1.0:
 
@@ -57,12 +55,11 @@ class Metric(SearchableAPIResource, SendableAPIResource, ListableAPIResource):
     @classmethod
     def send(  # type: ignore[override]
         cls,
-        metrics=None,  # type: Optional[Any]
-        attach_host_name=True,  # type: bool
-        compress_payload=False,  # type: bool
-        **single_metric  # type: Any
-    ):
-        # type: (...) -> Any
+        metrics: Optional[Any] = None,
+        attach_host_name: bool = True,
+        compress_payload: bool = False,
+        **single_metric: Any
+    ) -> Any:
         """
         Submit a metric or a list of metrics to the metric API
         A metric dictionary should consist of 5 keys: metric, points, host, tags, type (some of which optional),
@@ -117,13 +114,12 @@ class Metric(SearchableAPIResource, SendableAPIResource, ListableAPIResource):
         except KeyError:
             raise KeyError("'points' parameter is required")
 
-        return super(Metric, cls).send(
+        return super().send(
             attach_host_name=attach_host_name, compress_payload=compress_payload, **metrics_dict
         )
 
     @classmethod
-    def query(cls, **params):
-        # type: (**Any) -> Any
+    def query(cls, **params: Any) -> Any:
         """
         Query metrics from Datadog
 
@@ -156,4 +152,4 @@ class Metric(SearchableAPIResource, SendableAPIResource, ListableAPIResource):
         except KeyError as e:
             raise ApiError("The parameter '{0}' is required".format(e.args[0]))
 
-        return super(Metric, cls)._search(**params)
+        return super()._search(**params)

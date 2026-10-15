@@ -15,8 +15,7 @@ class Metadata(GetableAPIResource, UpdatableAPIResource):
     _resource_name = "metrics"
 
     @classmethod
-    def get(cls, metric_name):  # type: ignore[override]
-        # type: (str) -> Any
+    def get(cls, metric_name: str) -> Any:  # type: ignore[override]
         """
         Get metadata information on an existing Datadog metric
 
@@ -27,11 +26,10 @@ class Metadata(GetableAPIResource, UpdatableAPIResource):
         if not metric_name:
             raise KeyError("'metric_name' parameter is required")
 
-        return super(Metadata, cls).get(metric_name)
+        return super().get(metric_name)
 
     @classmethod
-    def update(cls, metric_name, **params):  # type: ignore[override]
-        # type: (str, **Any) -> Any
+    def update(cls, metric_name: str, **params: Any) -> Any:  # type: ignore[override]
         """
         Update metadata fields for an existing Datadog metric.
         If the metadata does not exist for the metric it is created by
@@ -65,4 +63,4 @@ class Metadata(GetableAPIResource, UpdatableAPIResource):
         if not metric_name:
             raise KeyError("'metric_name' parameter is required")
 
-        return super(Metadata, cls).update(id=metric_name, **params)
+        return super().update(id=metric_name, **params)

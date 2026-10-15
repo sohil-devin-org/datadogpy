@@ -31,8 +31,7 @@ class Roles(
     _api_version = "v2"
 
     @classmethod
-    def update(cls, id, **body):  # type: ignore[override]
-        # type: (str, **Any) -> Any
+    def update(cls, id: str, **body: Any) -> Any:  # type: ignore[override]
         """
         Update a role's attributes
 
@@ -40,12 +39,11 @@ class Roles(
         :param body: dict with type of the input, role `id`, and modified attributes
         :returns: Dictionary representing the API's JSON response
         """
-        params = {}  # type: Dict[str, Any]
-        return super(Roles, cls).update("PATCH", id, params=params, **body)
+        params: Dict[str, Any] = {}
+        return super().update("PATCH", id, params=params, **body)
 
     @classmethod
-    def assign_permission(cls, id, **body):
-        # type: (str, **Any) -> Any
+    def assign_permission(cls, id: str, **body: Any) -> Any:
         """
         Assign permission to a role
 
@@ -53,15 +51,14 @@ class Roles(
         :param body: dict with "type": "permissions" and uuid of permission to assign
         :returns: Dictionary representing the API's JSON response
         """
-        params = {}  # type: Dict[str, Any]
+        params: Dict[str, Any] = {}
         path = "{resource_name}/{resource_id}/permissions".format(resource_name=cls._resource_name, resource_id=id)
         api_version = getattr(cls, "_api_version", None)
 
         return APIClient.submit("POST", path, api_version, body, **params)
 
     @classmethod
-    def unassign_permission(cls, id, **body):
-        # type: (str, **Any) -> Any
+    def unassign_permission(cls, id: str, **body: Any) -> Any:
         """
         Unassign permission from a role
 
@@ -69,7 +66,7 @@ class Roles(
         :param body: dict with "type": "permissions" and uuid of permission to unassign
         :returns: Dictionary representing the API's JSON response
         """
-        params = {}  # type: Dict[str, Any]
+        params: Dict[str, Any] = {}
         path = "{resource_name}/{resource_id}/permissions".format(resource_name=cls._resource_name, resource_id=id)
         api_version = getattr(cls, "_api_version", None)
 
