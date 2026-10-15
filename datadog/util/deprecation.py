@@ -7,13 +7,10 @@ from functools import wraps
 from typing import Any, Callable
 
 
-def deprecated(message):
-    # type: (str) -> Callable[[Callable[..., Any]], Callable[..., Any]]
-    def deprecated_decorator(func):
-        # type: (Callable[..., Any]) -> Callable[..., Any]
+def deprecated(message: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def deprecated_decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
-        def deprecated_func(*args, **kwargs):
-            # type: (*Any, **Any) -> Any
+        def deprecated_func(*args: Any, **kwargs: Any) -> Any:
             warnings.warn(
                 "'{0}' is a deprecated function. {1}".format(func.__name__, message),
                 category=DeprecationWarning,

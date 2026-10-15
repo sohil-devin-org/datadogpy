@@ -2,7 +2,6 @@
 # This product includes software developed at Datadog (https://www.datadoghq.com/).
 # Copyright 2015-Present Datadog, Inc.
 
-# -*- coding: utf-8 -*-
 #
 # Datadog API documentation build configuration file, created by
 # sphinx-quickstart on Wed Aug 24 16:17:40 2011.
@@ -45,8 +44,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Datadog Python Client'
-copyright = u'2015-Present Datadog, Inc.'
+project = 'Datadog Python Client'
+copyright = '2015-Present Datadog, Inc.'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -183,8 +182,8 @@ htmlhelp_basename = 'DatadogAPIdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'Datadogpy.tex', u'Datadog Python Client Documentation',
-   u'Datadog, Inc.', 'manual'),
+  ('index', 'Datadogpy.tex', 'Datadog Python Client Documentation',
+   'Datadog, Inc.', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -216,6 +215,6 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'datadogpy', u'Datadog Python Client Documentation',
-     [u'Datadog, Inc.'], 1)
+    ('index', 'datadogpy', 'Datadog Python Client Documentation',
+     ['Datadog, Inc.'], 1)
 ]
