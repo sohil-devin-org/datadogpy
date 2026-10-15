@@ -19,10 +19,9 @@ from datadog import api
 from datadog.dogshell.common import report_errors, report_warnings
 
 
-class ServiceLevelObjectiveClient(object):
+class ServiceLevelObjectiveClient:
     @classmethod
-    def setup_parser(cls, subparsers):
-        # type: (argparse._SubParsersAction[argparse.ArgumentParser]) -> None
+    def setup_parser(cls, subparsers: "argparse._SubParsersAction[argparse.ArgumentParser]") -> None:
         parser = subparsers.add_parser(
             "service_level_objective",
             help="Create, edit, and delete service level objectives",
@@ -176,8 +175,7 @@ class ServiceLevelObjectiveClient(object):
         history_parser.set_defaults(func=cls._history)
 
     @classmethod
-    def _create(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _create(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
 
@@ -235,8 +233,7 @@ class ServiceLevelObjectiveClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _file_create(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _file_create(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         slo = json.load(args.file)
@@ -249,8 +246,7 @@ class ServiceLevelObjectiveClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _update(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _update(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
 
@@ -309,8 +305,7 @@ class ServiceLevelObjectiveClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _file_update(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _file_update(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         slo = json.load(args.file)
@@ -324,8 +319,7 @@ class ServiceLevelObjectiveClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _show(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _show(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         res = api.ServiceLevelObjective.get(args.slo_id, return_raw=True)
@@ -341,8 +335,7 @@ class ServiceLevelObjectiveClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _show_all(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _show_all(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
 
@@ -362,8 +355,7 @@ class ServiceLevelObjectiveClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _delete(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _delete(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         res = api.ServiceLevelObjective.delete(args.slo_id, return_raw=True)
         if res is not None:
@@ -376,8 +368,7 @@ class ServiceLevelObjectiveClient(object):
                 print(json.dumps(res))
 
     @classmethod
-    def _delete_many(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _delete_many(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         res = api.ServiceLevelObjective.delete_many(args.slo_ids)
         if res is not None:
@@ -390,8 +381,7 @@ class ServiceLevelObjectiveClient(object):
                 print(json.dumps(res))
 
     @classmethod
-    def _delete_timeframe(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _delete_timeframe(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
 
         ops = {args.slo_id: args.timeframes}
@@ -407,8 +397,7 @@ class ServiceLevelObjectiveClient(object):
                 print(json.dumps(res))
 
     @classmethod
-    def _can_delete(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _can_delete(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
 
         res = api.ServiceLevelObjective.can_delete(args.slo_ids)
@@ -422,8 +411,7 @@ class ServiceLevelObjectiveClient(object):
                 print(json.dumps(res))
 
     @classmethod
-    def _history(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _history(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
 
         res = api.ServiceLevelObjective.history(args.slo_id, args.from_ts, args.to_ts)
@@ -437,6 +425,5 @@ class ServiceLevelObjectiveClient(object):
                 print(json.dumps(res))
 
     @classmethod
-    def _escape(cls, s):
-        # type: (str) -> str
+    def _escape(cls, s: str) -> str:
         return s.replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t")

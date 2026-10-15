@@ -20,8 +20,7 @@ from datadog.dogshell.common import report_errors, report_warnings
 time_pat = re.compile(r"(?P<delta>[0-9]*\.?[0-9]+)(?P<unit>[mhd])")
 
 
-def prettyprint_event(event):
-    # type: (Dict[str, Any]) -> None
+def prettyprint_event(event: Dict[str, Any]) -> None:
     title = event["title"] or ""
     text = event.get("text", "") or ""
     handle = event.get("handle", "") or ""
@@ -34,23 +33,19 @@ def prettyprint_event(event):
     print(dt.isoformat(" ") + " | " + link)
 
 
-def print_event(event):
-    # type: (Dict[str, Any]) -> None
+def print_event(event: Dict[str, Any]) -> None:
     prettyprint_event(event)
 
 
-def prettyprint_event_details(event):
-    # type: (Dict[str, Any]) -> None
+def prettyprint_event_details(event: Dict[str, Any]) -> None:
     prettyprint_event(event)
 
 
-def print_event_details(event):
-    # type: (Dict[str, Any]) -> None
+def print_event_details(event: Dict[str, Any]) -> None:
     prettyprint_event(event)
 
 
-def parse_time(timestring):
-    # type: (Optional[str]) -> int
+def parse_time(timestring: Optional[str]) -> int:
     now = time.mktime(datetime.datetime.now().timetuple())
     if timestring is None:
         t = now
@@ -73,10 +68,9 @@ def parse_time(timestring):
     return int(t)
 
 
-class EventClient(object):
+class EventClient:
     @classmethod
-    def setup_parser(cls, subparsers):
-        # type: (argparse._SubParsersAction[argparse.ArgumentParser]) -> None
+    def setup_parser(cls, subparsers: "argparse._SubParsersAction[argparse.ArgumentParser]") -> None:
         parser = subparsers.add_parser("event", help="Post events, get event details," " and view the event stream.")
         verb_parsers = parser.add_subparsers(title="Verbs", dest="verb")
         verb_parsers.required = True
@@ -124,8 +118,7 @@ class EventClient(object):
         stream_parser.set_defaults(func=cls._stream)
 
     @classmethod
-    def _post(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _post(cls, args: argparse.Namespace) -> None:
         """
         Post an event.
         """
@@ -168,8 +161,7 @@ class EventClient(object):
             print_event(res["event"])
 
     @classmethod
-    def _show(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _show(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         res = api.Event.get(args.event_id)
@@ -183,8 +175,7 @@ class EventClient(object):
             print_event_details(res["event"])
 
     @classmethod
-    def _stream(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _stream(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         if args.sources is not None:
