@@ -6,10 +6,8 @@
 import errno
 import os
 import re
-import sys
 
-if sys.version_info[:2] >= (3, 5):
-    from typing import Optional  # noqa: F401
+from typing import Optional  # noqa: F401
 
 
 class UnresolvableContainerID(Exception):
@@ -18,7 +16,7 @@ class UnresolvableContainerID(Exception):
     """
 
 
-class Cgroup(object):
+class Cgroup:
     """
     A reader class that retrieves either:
     - The current container ID parsed from the cgroup file
@@ -45,15 +43,13 @@ class Cgroup(object):
     LINE_RE = re.compile(r"^(\d+):([^:]*):(.+)$")
     CONTAINER_RE = re.compile(r"(?:.+)?({0}|{1}|{2})(?:\.scope)?$".format(UUID_SOURCE, CONTAINER_SOURCE, TASK_SOURCE))
 
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         if self._is_host_cgroup_namespace():
             self.container_id = self._read_cgroup_path()
             return
         self.container_id = self._get_cgroup_from_inode()
 
-    def _is_host_cgroup_namespace(self):
-        # type: () -> bool
+    def _is_host_cgroup_namespace(self) -> bool:
         """Check if the current process is in a host cgroup namespace."""
         try:
             return (
@@ -64,8 +60,7 @@ class Cgroup(object):
         except Exception:
             return False
 
-    def _read_cgroup_path(self):
-        # type: () -> Optional[str]
+    def _read_cgroup_path(self) -> Optional[str]:
         """Read the container ID from the cgroup file."""
         try:
             with open(self.CGROUP_PATH, mode="r") as fp:
@@ -87,8 +82,7 @@ class Cgroup(object):
             raise UnresolvableContainerID("Unable to read the container ID: " + str(e))
         return None
 
-    def _get_cgroup_from_inode(self):
-        # type: () -> Optional[str]
+    def _get_cgroup_from_inode(self) -> Optional[str]:
         """Read the container ID from the cgroup inode."""
         # Parse /proc/self/cgroup and get a map of controller to its associated cgroup node path.
         cgroup_controllers_paths = {}

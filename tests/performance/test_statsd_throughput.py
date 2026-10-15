@@ -1,4 +1,3 @@
-# coding: utf8
 # Unless explicitly stated otherwise all files in this repository are licensed
 # under the BSD-3-Clause License. This product includes software developed at
 # Datadog (https://www.datadoghq.com/).
@@ -11,6 +10,7 @@ import io
 import logging
 import os
 import pstats
+import queue
 import random
 import sys
 import threading
@@ -18,14 +18,8 @@ import timeit
 import unittest
 import warnings
 
-try:
-    import queue
-except ImportError:
-    import Queue as queue
-
 # datadog
 from datadog.dogstatsd.base import DogStatsd
-from datadog.util.compat import is_p3k
 
 # test utils
 from tests.util.fake_statsd_server import FakeServer
@@ -34,7 +28,7 @@ from tests.util.system_info_observer import SysInfoObserver
 
 # StatsdSender is a static helper for sending mock metrics to statsd via a simple API
 # pylint: disable=too-few-public-methods,useless-object-inheritance
-class StatsdSender(object):
+class StatsdSender:
     EXTRA_TAGS = ["bar = barval", "baz = bazval"]
     STATIC_TIMING_SET = set(range(100))
 
@@ -363,10 +357,7 @@ class TestDogStatsdThroughput(unittest.TestCase):
 
         profiler.disable()
 
-        if is_p3k():
-            output_stream = io.StringIO()
-        else:
-            output_stream = io.BytesIO()
+        output_stream = io.StringIO()
 
         profiling_stats = pstats.Stats(
                 profiler,

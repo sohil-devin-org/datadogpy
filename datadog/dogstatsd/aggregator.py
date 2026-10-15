@@ -1,8 +1,6 @@
 import threading
-import sys
 
-if sys.version_info[:2] >= (3, 5):
-    from typing import Any, Dict, List, Optional  # noqa: F401
+from typing import Any, Dict, List, Optional  # noqa: F401
 
 from datadog.dogstatsd.metrics import (
     CountMetric,
@@ -20,15 +18,14 @@ from datadog.dogstatsd.max_sample_metric_context import MaxSampleMetricContexts
 from datadog.util.format import validate_cardinality
 
 
-class Aggregator(object):
-    def __init__(self, max_samples_per_context=0, cardinality=None):
-        # type: (int, Optional[str]) -> None
+class Aggregator:
+    def __init__(self, max_samples_per_context: int = 0, cardinality: Optional[str] = None) -> None:
         self.max_samples_per_context = max_samples_per_context
-        self.metrics_map = {
+        self.metrics_map: Dict[str, Dict[str, MetricAggregator]] = {
             MetricType.COUNT: {},
             MetricType.GAUGE: {},
             MetricType.SET: {},
-        }  # type: Dict[str, Dict[str, MetricAggregator]]
+        }
         self.max_sample_metric_map = {
             MetricType.HISTOGRAM: MaxSampleMetricContexts(HistogramMetric),
             MetricType.DISTRIBUTION: MaxSampleMetricContexts(DistributionMetric),
@@ -41,9 +38,8 @@ class Aggregator(object):
         }
         self.cardinality = cardinality
 
-    def flush_aggregated_metrics(self):
-        # type: () -> List[MetricAggregator]
-        metrics = []  # type: List[MetricAggregator]
+    def flush_aggregated_metrics(self) -> List[MetricAggregator]:
+        metrics: List[MetricAggregator] = []
         for metric_type in self.metrics_map.keys():
             with self._locks[metric_type]:
                 current_metrics = self.metrics_map[metric_type]
@@ -53,46 +49,65 @@ class Aggregator(object):
 
         return metrics
 
-    def set_max_samples_per_context(self, max_samples_per_context=0):
-        # type: (int) -> None
+    def set_max_samples_per_context(self, max_samples_per_context: int = 0) -> None:
         self.max_samples_per_context = max_samples_per_context
 
-    def flush_aggregated_sampled_metrics(self):
-        # type: () -> List[MetricAggregator]
-        metrics = []  # type: List[MetricAggregator]
+    def flush_aggregated_sampled_metrics(self) -> List[MetricAggregator]:
+        metrics: List[MetricAggregator] = []
         for metric_type in self.max_sample_metric_map.keys():
             metric_context = self.max_sample_metric_map[metric_type]
             for metricList in metric_context.flush():
                 metrics.extend(metricList)
         return metrics
 
-    def get_context(self, name, tags):
-        # type: (str, Optional[List[str]]) -> str
-        tags_str = u",".join(tags) if tags is not None else ""
-        return u"{}:{}".format(name, tags_str)
+    def get_context(self, name: str, tags: Optional[List[str]]) -> str:
+        tags_str = ",".join(tags) if tags is not None else ""
+        return "{}:{}".format(name, tags_str)
 
-    def count(self, name, value, tags, rate, timestamp=0, cardinality=None):
-        # type: (str, Any, Optional[List[str]], Optional[float], int, Optional[str]) -> None
+    def count(self,
+              name: str,
+              value: Any,
+              tags: Optional[List[str]],
+              rate: Optional[float],
+              timestamp: int = 0,
+              cardinality: Optional[str] = None) -> None:
         return self.add_metric(
             MetricType.COUNT, CountMetric, name, value, tags, rate, timestamp, cardinality
         )
 
-    def gauge(self, name, value, tags, rate, timestamp=0, cardinality=None):
-        # type: (str, Any, Optional[List[str]], Optional[float], int, Optional[str]) -> None
+    def gauge(self,
+              name: str,
+              value: Any,
+              tags: Optional[List[str]],
+              rate: Optional[float],
+              timestamp: int = 0,
+              cardinality: Optional[str] = None) -> None:
         return self.add_metric(
             MetricType.GAUGE, GaugeMetric, name, value, tags, rate, timestamp, cardinality
         )
 
-    def set(self, name, value, tags, rate, timestamp=0, cardinality=None):
-        # type: (str, Any, Optional[List[str]], Optional[float], int, Optional[str]) -> None
+    def set(self,
+            name: str,
+            value: Any,
+            tags: Optional[List[str]],
+            rate: Optional[float],
+            timestamp: int = 0,
+            cardinality: Optional[str] = None) -> None:
         return self.add_metric(
             MetricType.SET, SetMetric, name, value, tags, rate, timestamp, cardinality
         )
 
     def add_metric(
-        self, metric_type, metric_class, name, value, tags, rate, timestamp=0, cardinality=None
-    ):
-        # type: (str, Any, str, Any, Optional[List[str]], Optional[float], int, Optional[str]) -> None
+        self,
+        metric_type: str,
+        metric_class: Any,
+        name: str,
+        value: Any,
+        tags: Optional[List[str]],
+        rate: Optional[float],
+        timestamp: int = 0,
+        cardinality: Optional[str] = None,
+    ) -> None:
         context = self.get_context(name, tags)
         with self._locks[metric_type]:
             if context in self.metrics_map[metric_type]:
@@ -105,28 +120,45 @@ class Aggregator(object):
                     name, value, tags, rate, timestamp, cardinality
                 )
 
-    def histogram(self, name, value, tags, rate, cardinality=None):
-        # type: (str, Any, Optional[List[str]], Optional[float], Optional[str]) -> None
+    def histogram(self,
+                  name: str,
+                  value: Any,
+                  tags: Optional[List[str]],
+                  rate: Optional[float],
+                  cardinality: Optional[str] = None) -> None:
         return self.add_max_sample_metric(
             MetricType.HISTOGRAM, name, value, tags, rate, cardinality
         )
 
-    def distribution(self, name, value, tags, rate, cardinality=None):
-        # type: (str, Any, Optional[List[str]], Optional[float], Optional[str]) -> None
+    def distribution(self,
+                     name: str,
+                     value: Any,
+                     tags: Optional[List[str]],
+                     rate: Optional[float],
+                     cardinality: Optional[str] = None) -> None:
         return self.add_max_sample_metric(
             MetricType.DISTRIBUTION, name, value, tags, rate, cardinality
         )
 
-    def timing(self, name, value, tags, rate, cardinality=None):
-        # type: (str, Any, Optional[List[str]], Optional[float], Optional[str]) -> None
+    def timing(self,
+               name: str,
+               value: Any,
+               tags: Optional[List[str]],
+               rate: Optional[float],
+               cardinality: Optional[str] = None) -> None:
         return self.add_max_sample_metric(
             MetricType.TIMING, name, value, tags, rate, cardinality
         )
 
     def add_max_sample_metric(
-        self, metric_type, name, value, tags, rate, cardinality=None
-    ):
-        # type: (str, str, Any, Optional[List[str]], Optional[float], Optional[str]) -> None
+        self,
+        metric_type: str,
+        name: str,
+        value: Any,
+        tags: Optional[List[str]],
+        rate: Optional[float],
+        cardinality: Optional[str] = None,
+    ) -> None:
         if rate is None:
             rate = 1
         context_key = self.get_context(name, tags)

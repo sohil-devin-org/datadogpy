@@ -1,21 +1,20 @@
 import random
-import sys
 
-if sys.version_info[:2] >= (3, 5):
-    from typing import List, Optional, cast  # noqa: F401
-else:
-    from typing import List, Optional  # noqa: F401
-
-    from datadog.util.compat import cast
+from typing import List, Optional, cast
 
 from datadog.dogstatsd.metric_types import MetricType
 from datadog.dogstatsd.metrics import MetricAggregator
 from threading import Lock
 
 
-class MaxSampleMetric(object):
-    def __init__(self, name, tags, metric_type, specified_rate=1.0, max_metric_samples=0, cardinality=None):
-        # type: (str, Optional[List[str]], str, float, int, Optional[str]) -> None
+class MaxSampleMetric:
+    def __init__(self,
+                 name: str,
+                 tags: Optional[List[str]],
+                 metric_type: str,
+                 specified_rate: float = 1.0,
+                 max_metric_samples: int = 0,
+                 cardinality: Optional[str] = None) -> None:
         self.name = name
         self.tags = tags
         self.lock = Lock()
@@ -23,12 +22,11 @@ class MaxSampleMetric(object):
         self.max_metric_samples = max_metric_samples
         self.cardinality = cardinality
         self.specified_rate = specified_rate
-        self.data = [None] * max_metric_samples if max_metric_samples > 0 else []  # type: List[Optional[float]]
+        self.data: List[Optional[float]] = [None] * max_metric_samples if max_metric_samples > 0 else []
         self.stored_metric_samples = 0
         self.total_metric_samples = 0
 
-    def sample(self, value):
-        # type: (float) -> None
+    def sample(self, value: float) -> None:
         if self.max_metric_samples == 0:
             self.data.append(value)
         else:
@@ -36,8 +34,7 @@ class MaxSampleMetric(object):
         self.stored_metric_samples += 1
         self.total_metric_samples += 1
 
-    def maybe_keep_sample_work_unsafe(self, value):
-        # type: (float) -> None
+    def maybe_keep_sample_work_unsafe(self, value: float) -> None:
         if self.max_metric_samples > 0:
             self.total_metric_samples += 1
             if self.stored_metric_samples < self.max_metric_samples:
@@ -50,12 +47,10 @@ class MaxSampleMetric(object):
         else:
             self.sample(value)
 
-    def skip_sample(self):
-        # type: () -> None
+    def skip_sample(self) -> None:
         self.total_metric_samples += 1
 
-    def flush(self):
-        # type: () -> List[MetricAggregator]
+    def flush(self) -> List[MetricAggregator]:
         with self.lock:
             rate = self.stored_metric_samples / self.total_metric_samples
             return [
@@ -70,20 +65,32 @@ class MaxSampleMetric(object):
 
 
 class HistogramMetric(MaxSampleMetric):
-    def __init__(self, name, tags, rate=1.0, max_metric_samples=0, cardinality=None):
-        # type: (str, Optional[List[str]], float, int, Optional[str]) -> None
-        super(HistogramMetric, self).__init__(name, tags, MetricType.HISTOGRAM, rate, max_metric_samples, cardinality)
+    def __init__(self,
+                 name: str,
+                 tags: Optional[List[str]],
+                 rate: float = 1.0,
+                 max_metric_samples: int = 0,
+                 cardinality: Optional[str] = None) -> None:
+        super().__init__(name, tags, MetricType.HISTOGRAM, rate, max_metric_samples, cardinality)
 
 
 class DistributionMetric(MaxSampleMetric):
-    def __init__(self, name, tags, rate=1.0, max_metric_samples=0, cardinality=None):
-        # type: (str, Optional[List[str]], float, int, Optional[str]) -> None
-        super(DistributionMetric, self).__init__(
+    def __init__(self,
+                 name: str,
+                 tags: Optional[List[str]],
+                 rate: float = 1.0,
+                 max_metric_samples: int = 0,
+                 cardinality: Optional[str] = None) -> None:
+        super().__init__(
             name, tags, MetricType.DISTRIBUTION, rate, max_metric_samples, cardinality
         )
 
 
 class TimingMetric(MaxSampleMetric):
-    def __init__(self, name, tags, rate=1.0, max_metric_samples=0, cardinality=None):
-        # type: (str, Optional[List[str]], float, int, Optional[str]) -> None
-        super(TimingMetric, self).__init__(name, tags, MetricType.TIMING, rate, max_metric_samples, cardinality)
+    def __init__(self,
+                 name: str,
+                 tags: Optional[List[str]],
+                 rate: float = 1.0,
+                 max_metric_samples: int = 0,
+                 cardinality: Optional[str] = None) -> None:
+        super().__init__(name, tags, MetricType.TIMING, rate, max_metric_samples, cardinality)
