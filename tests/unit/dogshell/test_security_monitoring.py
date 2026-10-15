@@ -10,7 +10,7 @@ import os
 import tempfile
 import unittest
 
-import mock
+from unittest import mock
 
 from datadog.dogshell.security_monitoring import SecurityMonitoringClient
 

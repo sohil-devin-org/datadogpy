@@ -21,8 +21,6 @@ dogwrap -n test-job -k $API_KEY --timeout=1 "sleep 3"
 
 """
 # stdlib
-from __future__ import print_function
-
 import os
 from copy import copy
 import optparse
@@ -37,7 +35,6 @@ from typing import Any, IO, List, Optional, Tuple, Type, Union
 
 # datadog
 from datadog import initialize, api, __version__
-from datadog.util.compat import is_p3k
 
 
 SUCCESS = "success"
@@ -57,8 +54,7 @@ class OutputReader(threading.Thread):
     a given file descriptor and storing it for further retrieval.
     """
 
-    def __init__(self, proc_out, fwd_out=None):
-        # type: (IO[bytes], Optional[IO[Any]]) -> None
+    def __init__(self, proc_out: IO[bytes], fwd_out: Optional[IO[Any]] = None) -> None:
         """
         Instantiates an OutputReader.
         :param proc_out: the output to read
@@ -72,8 +68,7 @@ class OutputReader(threading.Thread):
         self._out = proc_out
         self._fwd_out = fwd_out
 
-    def run(self):
-        # type: () -> None
+    def run(self) -> None:
         """
         Thread's main loop: collects the output optionnally forwarding it to
         the file descriptor passed in the constructor.
@@ -85,16 +80,14 @@ class OutputReader(threading.Thread):
         self._out.close()
 
     @property
-    def content(self):
-        # type: () -> bytes
+    def content(self) -> bytes:
         """
         The content stored in out so far. (Not threadsafe, wait with .join())
         """
         return self._out_content
 
 
-def poll_proc(proc, sleep_interval, timeout):
-    # type: (subprocess.Popen[bytes], float, float) -> int
+def poll_proc(proc: subprocess.Popen[bytes], sleep_interval: float, timeout: float) -> int:
     """
     Polls the process until it returns or a given timeout has been reached
     """
@@ -109,25 +102,29 @@ def poll_proc(proc, sleep_interval, timeout):
     return returncode
 
 
-def execute(cmd, cmd_timeout, sigterm_timeout, sigkill_timeout, proc_poll_interval, buffer_outs):
-    # type: (str, float, float, float, float, bool) -> Tuple[Union[int, Type[Timeout]], bytes, bytes, float]
+def execute(cmd: str,
+            cmd_timeout: float,
+            sigterm_timeout: float,
+            sigkill_timeout: float,
+            proc_poll_interval: float,
+            buffer_outs: bool) -> Tuple[Union[int, Type[Timeout]], bytes, bytes, float]:
     """
     Launches the process and monitors its outputs
     """
     start_time = time.time()
-    returncode = -1  # type: Union[int, Type[Timeout]]
+    returncode: Union[int, Type[Timeout]] = -1
     stdout = b""
     stderr = b""
     try:
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     except Exception:
-        print(u"Failed to execute %s" % (repr(cmd)), file=sys.stderr)
+        print("Failed to execute %s" % (repr(cmd)), file=sys.stderr)
         raise
     try:
         # Let's that the threads collecting the output from the command in the
         # background
-        stdout_buffer = sys.stdout.buffer if is_p3k() else sys.stdout
-        stderr_buffer = sys.stderr.buffer if is_p3k() else sys.stderr
+        stdout_buffer = sys.stdout.buffer
+        stderr_buffer = sys.stderr.buffer
         assert proc.stdout is not None
         assert proc.stderr is not None
         out_reader = OutputReader(proc.stdout, stdout_buffer if not buffer_outs else None)
@@ -176,8 +173,7 @@ def execute(cmd, cmd_timeout, sigterm_timeout, sigkill_timeout, proc_poll_interv
     return returncode, stdout, stderr, duration
 
 
-def trim_text(text, max_len):
-    # type: (str, int) -> str
+def trim_text(text: str, max_len: int) -> str:
     """
     Trim input text to fit the `max_len` condition.
 
@@ -188,11 +184,11 @@ def trim_text(text, max_len):
         return text
 
     trimmed_text = (
-        u"{top_third}\n"
-        u"```\n"
-        u"*...trimmed...*\n"
-        u"```\n"
-        u"{bottom_two_third}\n".format(
+        "{top_third}\n"
+        "```\n"
+        "*...trimmed...*\n"
+        "```\n"
+        "{bottom_two_third}\n".format(
             top_third=text[: max_len // 3], bottom_two_third=text[len(text) - (2 * max_len) // 3 :]
         )
     )
@@ -200,41 +196,44 @@ def trim_text(text, max_len):
     return trimmed_text
 
 
-def build_event_body(cmd, returncode, stdout, stderr, notifications):
-    # type: (str, Union[int, Type[Timeout]], bytes, bytes, Union[str, bytes]) -> str
+def build_event_body(cmd: str,
+                     returncode: Union[int, Type[Timeout]],
+                     stdout: bytes,
+                     stderr: bytes,
+                     notifications: Union[str, bytes]) -> str:
     """
     Format and return an event body.
 
     Note: do not exceed MAX_EVENT_BODY_LENGTH length.
     """
-    fmt_stdout = u""
-    fmt_stderr = u""
-    fmt_notifications = u""
+    fmt_stdout = ""
+    fmt_stderr = ""
+    fmt_notifications = ""
 
     max_length = MAX_EVENT_BODY_LENGTH // 2 if stdout and stderr else MAX_EVENT_BODY_LENGTH
 
     if stdout:
-        fmt_stdout = u"**>>>> STDOUT <<<<**\n```\n{stdout} \n```\n".format(
+        fmt_stdout = "**>>>> STDOUT <<<<**\n```\n{stdout} \n```\n".format(
             stdout=trim_text(stdout.decode("utf-8", "replace"), max_length)
         )
 
     if stderr:
-        fmt_stderr = u"**>>>> STDERR <<<<**\n```\n{stderr} \n```\n".format(
+        fmt_stderr = "**>>>> STDERR <<<<**\n```\n{stderr} \n```\n".format(
             stderr=trim_text(stderr.decode("utf-8", "replace"), max_length)
         )
 
     if notifications:
         notifications = notifications.decode("utf-8", "replace") if isinstance(notifications, bytes) else notifications
-        fmt_notifications = u"**>>>> NOTIFICATIONS <<<<**\n\n {notifications}\n".format(notifications=notifications)
+        fmt_notifications = "**>>>> NOTIFICATIONS <<<<**\n\n {notifications}\n".format(notifications=notifications)
 
     return (
-        u"%%%\n"
-        u"**>>>> CMD <<<<**\n```\n{command} \n```\n"
-        u"**>>>> EXIT CODE <<<<**\n\n {returncode}\n\n\n"
-        u"{stdout}"
-        u"{stderr}"
-        u"{notifications}"
-        u"%%%\n".format(
+        "%%%\n"
+        "**>>>> CMD <<<<**\n```\n{command} \n```\n"
+        "**>>>> EXIT CODE <<<<**\n\n {returncode}\n\n\n"
+        "{stdout}"
+        "{stderr}"
+        "{notifications}"
+        "%%%\n".format(
             command=cmd,
             returncode=returncode,
             stdout=fmt_stdout,
@@ -244,8 +243,7 @@ def build_event_body(cmd, returncode, stdout, stderr, notifications):
     )
 
 
-def generate_warning_codes(option, opt, options_warning):
-    # type: (optparse.Option, str, str) -> List[str]
+def generate_warning_codes(option: optparse.Option, opt: str, options_warning: str) -> List[str]:
     try:
         # options_warning is a string e.g.: --warning_codes 123,456,789
         # we need to create a list from it
@@ -262,8 +260,7 @@ class DogwrapOption(optparse.Option):
     TYPE_CHECKER["warning_codes"] = generate_warning_codes
 
 
-def parse_options(raw_args=None):
-    # type: (Optional[List[str]]) -> Tuple[optparse.Values, str]
+def parse_options(raw_args: Optional[List[str]] = None) -> Tuple[optparse.Values, str]:
     """
     Parse the raw command line options into an options object and the remaining command string
     """
@@ -410,16 +407,12 @@ returned (the command outputs remains buffered in dogwrap meanwhile)",
 
     options, args = parser.parse_args(args=raw_args)
 
-    if is_p3k():
-        cmd = " ".join(args)
-    else:
-        cmd = b" ".join(a if isinstance(a, bytes) else a.encode("utf-8") for a in args).decode("utf-8")
+    cmd = " ".join(args)
 
     return options, cmd
 
 
-def main():
-    # type: () -> None
+def main() -> None:
     options, cmd = parse_options()
 
     # If silent is checked we force the outputs to be buffered (and therefore
@@ -461,7 +454,7 @@ def main():
     if returncode == 0:
         alert_type = SUCCESS
         event_priority = "low"
-        event_title = u"[%s] %s succeeded in %.2fs" % (host, options.name, duration)
+        event_title = "[%s] %s succeeded in %.2fs" % (host, options.name, duration)
     elif returncode != 0 and options.submit_mode == "warnings":
         if not warning_codes:
             # the list of warning codes is empty - the option was not specified
@@ -470,7 +463,7 @@ def main():
         elif returncode in warning_codes:
             alert_type = WARNING
             event_priority = "normal"
-            event_title = u"[%s] %s failed in %.2fs" % (host, options.name, duration)
+            event_title = "[%s] %s failed in %.2fs" % (host, options.name, duration)
         else:
             print("Command exited with a different exit code that the one(s) provided")
             sys.exit()
@@ -479,10 +472,10 @@ def main():
         event_priority = "normal"
 
         if returncode is Timeout:
-            event_title = u"[%s] %s timed out after %.2fs" % (host, options.name, duration)
+            event_title = "[%s] %s timed out after %.2fs" % (host, options.name, duration)
             returncode = -1
         else:
-            event_title = u"[%s] %s failed in %.2fs" % (host, options.name, duration)
+            event_title = "[%s] %s failed in %.2fs" % (host, options.name, duration)
 
     notifications = ""
 
@@ -509,8 +502,8 @@ def main():
     }
 
     if options.buffer_outs:
-        stderr_out = stderr.decode("utf-8") if is_p3k() else stderr  # type: Union[bytes, str]
-        stdout_out = stdout.decode("utf-8") if is_p3k() else stdout  # type: Union[bytes, str]
+        stderr_out = stderr.decode("utf-8")
+        stdout_out = stdout.decode("utf-8")
 
         print(stderr_out.strip(), file=sys.stderr)
         print(stdout_out.strip(), file=sys.stdout)
