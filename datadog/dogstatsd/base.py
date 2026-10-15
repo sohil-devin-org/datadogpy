@@ -1791,7 +1791,7 @@ class DogStatsd(object):
             else:
                 # Telemetry packet has been dropped, keep telemetry data for the next flush
                 self._last_flush_time = time.time()
-                self.bytes_dropped_writer += len(telemetry.encode(self.encoding))
+                self.bytes_dropped_writer += len(telemetry.encode(self.encoding, "replace"))
                 self.packets_dropped_writer += 1
 
         return sent
@@ -1832,7 +1832,7 @@ class DogStatsd(object):
             return None
 
         if not is_telemetry and self._telemetry:
-            self.bytes_dropped_writer += len(packet.encode(self.encoding))
+            self.bytes_dropped_writer += len(packet.encode(self.encoding, "replace"))
             self.packets_dropped_writer += 1
         return False
 

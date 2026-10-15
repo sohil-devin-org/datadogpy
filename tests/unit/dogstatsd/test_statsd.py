@@ -1166,6 +1166,18 @@ class TestDogStatsd(unittest.TestCase):
         self.assertEqual(statsd.packets_dropped_writer, 1)
         self.assertEqual(statsd.bytes_dropped_writer, 45)
 
+    @unittest.skipUnless(is_p3k(), "Python 2 encodes lone surrogates")
+    def test_unencodable_packet_is_dropped_without_raising(self):
+        statsd = DogStatsd(telemetry_min_flush_interval=3600)
+        statsd.socket = FakeSocket()
+        statsd._reset_telemetry()
+
+        with mock.patch("datadog.dogstatsd.base.log"):
+            statsd.event("t", u"x\ud800")
+
+        self.assertEqual(statsd.packets_dropped_writer, 1)
+        self.assertEqual(statsd.bytes_dropped_writer, len(u"_e{1,2}:t|x?\n"))
+
     def test_telemetry_packet_bytes_dropped_writer_counts_encoded_bytes(self):
         statsd = DogStatsd(telemetry_min_flush_interval=0, constant_tags=[u"region:\u6771\u4eac"])
         broken_socket = BrokenSocket()
