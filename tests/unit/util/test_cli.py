@@ -4,6 +4,7 @@
 from argparse import ArgumentTypeError
 from freezegun import freeze_time
 import datetime
+import platform
 import unittest
 
 from datadog.util.cli import (
@@ -18,7 +19,6 @@ from datadog.util.cli import (
     parse_date_as_epoch_timestamp,
     parse_date,
 )
-from datadog.util.compat import is_pypy
 from datadog.util.format import force_to_epoch_seconds
 
 
@@ -148,7 +148,7 @@ class TestCLI(unittest.TestCase):
             ("2019-10", datetime.datetime(2019, 10, 1, 0, 0, 0, 0)),
             ("1571805872", test_date),  # seconds
         ]
-        if not is_pypy():
+        if platform.python_implementation() != "PyPy":
             cases.append(
                 ("1571805872000", test_date)
             )  # millis, pypy does not work (known)
@@ -193,7 +193,7 @@ class TestCLI(unittest.TestCase):
             ("2019-10", datetime.datetime(2019, 10, 1, 0, 0, 0, 0)),
             ("1571805872", test_date),  # seconds
         ]
-        if not is_pypy():
+        if platform.python_implementation() != "PyPy":
             cases.append(
                 ("1571805872000", test_date)
             )  # millis, pypy does not work (known)

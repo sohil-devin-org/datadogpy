@@ -13,47 +13,42 @@ without hindering performance.
 # stdlib
 import logging
 import os
-import sys
-
-if sys.version_info[0] >= 3:
-    from typing import Any, List, Optional  # noqa: F401
+from typing import Any, List, Optional
 
 # datadog
 from datadog import api
 from datadog.dogstatsd import DogStatsd, statsd  # noqa
 from datadog.dogstatsd.base import DEFAULT_HOST, DEFAULT_PORT
 from datadog.threadstats import ThreadStats, datadog_lambda_wrapper, lambda_metric  # noqa
-from datadog.util.compat import iteritems, NullHandler, text
 from datadog.util.hostname import get_hostname
 from datadog.version import __version__  # noqa
 
 # Loggers
-logging.getLogger("datadog.api").addHandler(NullHandler())
-logging.getLogger("datadog.dogstatsd").addHandler(NullHandler())
-logging.getLogger("datadog.threadstats").addHandler(NullHandler())
+logging.getLogger("datadog.api").addHandler(logging.NullHandler())
+logging.getLogger("datadog.dogstatsd").addHandler(logging.NullHandler())
+logging.getLogger("datadog.threadstats").addHandler(logging.NullHandler())
 
 
 def initialize(
-    api_key=None,  # type: Optional[str]
-    app_key=None,  # type: Optional[str]
-    host_name=None,  # type: Optional[str]
-    api_host=None,  # type: Optional[str]
-    statsd_host=None,  # type: Optional[str]
-    statsd_port=None,  # type: Optional[int]
-    statsd_disable_aggregation=True,  # type: bool
-    statsd_disable_buffering=True,  # type: bool
-    statsd_aggregation_flush_interval=0.3,  # type: float
-    statsd_use_default_route=False,  # type: bool
-    statsd_socket_path=None,  # type: Optional[str]
-    statsd_namespace=None,  # type: Optional[str]
-    statsd_max_samples_per_context=0,  # type: int
-    statsd_constant_tags=None,  # type: Optional[List[str]]
-    return_raw_response=False,  # type: bool
-    hostname_from_config=True,  # type: bool
-    cardinality=None,  # type: Optional[str]
-    **kwargs  # type: Any
-):
-    # type: (...) -> None
+    api_key: Optional[str] = None,
+    app_key: Optional[str] = None,
+    host_name: Optional[str] = None,
+    api_host: Optional[str] = None,
+    statsd_host: Optional[str] = None,
+    statsd_port: Optional[int] = None,
+    statsd_disable_aggregation: bool = True,
+    statsd_disable_buffering: bool = True,
+    statsd_aggregation_flush_interval: float = 0.3,
+    statsd_use_default_route: bool = False,
+    statsd_socket_path: Optional[str] = None,
+    statsd_namespace: Optional[str] = None,
+    statsd_max_samples_per_context: int = 0,
+    statsd_constant_tags: Optional[List[str]] = None,
+    return_raw_response: bool = False,
+    hostname_from_config: bool = True,
+    cardinality: Optional[str] = None,
+    **kwargs: Any
+) -> None:
     """
     Initialize and configure Datadog.api and Datadog.statsd modules
 
@@ -161,7 +156,7 @@ def initialize(
                 statsd.port = DEFAULT_PORT
     statsd.close_socket()
     if statsd_namespace:
-        statsd.namespace = text(statsd_namespace)
+        statsd.namespace = str(statsd_namespace)
     if statsd_constant_tags:
         statsd.constant_tags += statsd_constant_tags
 
@@ -176,6 +171,6 @@ def initialize(
     statsd.cardinality = cardinality or os.environ.get("DATADOG_CARDINALITY", os.environ.get("DD_CARDINALITY"))
 
     # HTTP client and API options
-    for key, value in iteritems(kwargs):
+    for key, value in kwargs.items():
         attribute = "_{}".format(key)
         setattr(api, attribute, value)
