@@ -783,6 +783,7 @@ class TestDogStatsd(unittest.TestCase):
         self.assertEqual(len(expected_telemetry), statsd.bytes_dropped_writer)
         self.assertEqual(1, statsd.packets_dropped_writer)
 
+    @unittest.skipUnless(is_p3k(), "Python 2's UTF-8 codec encodes lone surrogates")
     def test_bytes_dropped_writer_unencodable_packet(self):
         statsd = DogStatsd(telemetry_min_flush_interval=10000)
         statsd._reset_telemetry()
