@@ -13,8 +13,7 @@ from datadog.util.format import force_to_epoch_seconds
 T = TypeVar("T")
 
 
-def comma_list(list_str, item_func=None):
-    # type: (str, Optional[Callable[[str], Union[T, str]]]) -> List[Union[T, str]]
+def comma_list(list_str: str, item_func: Optional[Callable[[str], Union[T, str]]] = None) -> List[Union[T, str]]:
     if not list_str:
         raise ArgumentTypeError("Invalid comma list")
 
@@ -22,21 +21,18 @@ def comma_list(list_str, item_func=None):
     return [item_func(i.strip()) for i in list_str.split(",") if i.strip()]
 
 
-def comma_set(list_str, item_func=None):
-    # type: (str, Optional[Callable[[str], Union[T, str]]]) -> Set[Union[T, str]]
+def comma_set(list_str: str, item_func: Optional[Callable[[str], Union[T, str]]] = None) -> Set[Union[T, str]]:
     return set(comma_list(list_str, item_func=item_func))
 
 
-def comma_list_or_empty(list_str):
-    # type: (Optional[str]) -> List[str]
+def comma_list_or_empty(list_str: Optional[str]) -> List[str]:
     if not list_str:
         return []
     else:
         return comma_list(list_str)
 
 
-def list_of_ints(int_csv):
-    # type: (Optional[str]) -> List[int]
+def list_of_ints(int_csv: Optional[str]) -> List[int]:
     if not int_csv:
         raise ArgumentTypeError("Invalid list of ints")
     try:
@@ -54,10 +50,8 @@ def list_of_ints(int_csv):
         raise ArgumentTypeError("Invalid list of ints: {0}".format(int_csv))
 
 
-def list_of_ints_and_strs(csv):
-    # type: (str) -> List[Union[int, str]]
-    def int_or_str(item):
-        # type: (str) -> Union[int, str]
+def list_of_ints_and_strs(csv: str) -> List[Union[int, str]]:
+    def int_or_str(item: str) -> Union[int, str]:
         try:
             return int(item)
         except ValueError:
@@ -66,8 +60,7 @@ def list_of_ints_and_strs(csv):
     return comma_list(csv, int_or_str)
 
 
-def set_of_ints(int_csv):
-    # type: (Optional[str]) -> Set[int]
+def set_of_ints(int_csv: Optional[str]) -> Set[int]:
     return set(list_of_ints(int_csv))
 
 
@@ -78,26 +71,22 @@ class DateParsingError(Exception):
 _date_fieldre = re.compile(r"(\d+)\s?(\w+) (ago|ahead)")
 
 
-def _midnight():
-    # type: () -> datetime
+def _midnight() -> datetime:
     """Truncate a date to midnight. Default to UTC midnight today."""
     return datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
 
 
-def parse_date_as_epoch_timestamp(date_str):
-    # type: (str) -> datetime
+def parse_date_as_epoch_timestamp(date_str: str) -> datetime:
     return parse_date(date_str, to_epoch_ts=True)
 
 
-def _parse_date_noop_formatter(d):
-    # type: (datetime) -> datetime
+def _parse_date_noop_formatter(d: datetime) -> datetime:
     """NOOP - only here for pylint"""
     return d
 
 
-def parse_date(date_str, to_epoch_ts=False):
-    # type: (Union[str, datetime, time.struct_time], bool) -> datetime
-    formatter = _parse_date_noop_formatter  # type: Callable[[datetime], datetime]
+def parse_date(date_str: Union[str, datetime, time.struct_time], to_epoch_ts: bool = False) -> datetime:
+    formatter: Callable[[datetime], datetime] = _parse_date_noop_formatter
     if to_epoch_ts:
         formatter = force_to_epoch_seconds  # type: ignore[assignment]
 
@@ -135,20 +124,18 @@ def parse_date(date_str, to_epoch_ts=False):
     elif date_str == "now":
         return formatter(datetime.utcnow())
 
-    def _from_epoch_timestamp(seconds):
-        # type: (Union[str, float]) -> datetime
+    def _from_epoch_timestamp(seconds: Union[str, float]) -> datetime:
         print("_from_epoch_timestamp({})".format(seconds))
         return datetime.utcfromtimestamp(float(seconds))
 
-    def _from_epoch_ms_timestamp(millis):
-        # type: (str) -> datetime
+    def _from_epoch_ms_timestamp(millis: str) -> datetime:
         print("_from_epoch_ms_timestamp({})".format(millis))
         in_sec = float(millis) / 1000.0
         print("_from_epoch_ms_timestamp({}) -> {}".format(millis, in_sec))
         return _from_epoch_timestamp(in_sec)
 
     # Or parse date formats (most specific to least specific)
-    parse_funcs = [
+    parse_funcs: List[Callable[[str], datetime]] = [
         lambda d: datetime.strptime(d, "%Y-%m-%d %H:%M:%S.%f"),
         lambda d: datetime.strptime(d, "%Y-%m-%d %H:%M:%S"),
         lambda d: datetime.strptime(d, "%Y-%m-%dT%H:%M:%S.%f"),
@@ -160,7 +147,7 @@ def parse_date(date_str, to_epoch_ts=False):
         lambda d: datetime.strptime(d, "%Y"),
         _from_epoch_timestamp,  # an epoch in seconds
         _from_epoch_ms_timestamp,  # an epoch in milliseconds
-    ]  # type: List[Callable[[str], datetime]]
+    ]
 
     for parse_func in parse_funcs:
         try:

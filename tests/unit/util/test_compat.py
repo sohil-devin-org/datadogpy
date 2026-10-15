@@ -1,15 +1,13 @@
-# coding: utf8
 # Unless explicitly stated otherwise all files in this repository are licensed under the BSD-3-Clause License.
 # This product includes software developed at Datadog (https://www.datadoghq.com/).
 # Copyright 2015-Present Datadog, Inc
 import logging
-import pytest
 import sys
 import unittest
 
 from mock import patch
 
-from datadog.util.compat import conditional_lru_cache, is_higher_py32, is_p3k
+from datadog.util.compat import conditional_lru_cache
 
 class TestConditionalLRUCache(unittest.TestCase):
     def test_normal_usage(self):
@@ -46,12 +44,8 @@ class TestConditionalLRUCache(unittest.TestCase):
 
             test_function()
 
-            if is_higher_py32():
-                mock_debug.assert_called_once()
-            else:
-                mock_debug.assert_not_called()
+            mock_debug.assert_called_once()
 
-@pytest.mark.skipif(not is_p3k(), reason='Python 3 only')
 def test_slow_imports(monkeypatch):
     # We should lazy load certain modules to avoid slowing down the startup
     # time when running in a serverless environment.  This test will fail if
@@ -74,7 +68,6 @@ def test_slow_imports(monkeypatch):
                 if fullname == lib:
                     raise ImportError('module %s was imported!' % fullname)
             return None
-        find_module = find_spec  # Python 2
 
     monkeypatch.setattr('sys.meta_path', [BlockListFinder()] + sys.meta_path)
 

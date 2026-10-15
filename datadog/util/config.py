@@ -3,10 +3,10 @@
 # Copyright 2015-Present Datadog, Inc
 import os
 import sys
+from io import StringIO
 from typing import Any, Dict, IO, Optional, List
 
 # datadog
-from datadog.util.compat import configparser, StringIO, is_p3k
 from datadog.version import __version__
 
 # CONSTANTS
@@ -21,8 +21,7 @@ class PathNotFound(Exception):
     pass
 
 
-def get_os():
-    # type: () -> str
+def get_os() -> str:
     "Human-friendly OS name"
     if sys.platform == "darwin":
         return "mac"
@@ -38,24 +37,19 @@ def get_os():
         return sys.platform
 
 
-def skip_leading_wsp(f):
-    # type: (IO[str]) -> StringIO
+def skip_leading_wsp(f: IO[str]) -> StringIO:
     "Works on a file, returns a file-like object"
-    if is_p3k():
-        return StringIO("\n".join(x.strip(" ") for x in f.readlines()))
-    else:
-        return StringIO("\n".join(map(str.strip, f.readlines())))
+    return StringIO("\n".join(x.strip(" ") for x in f.readlines()))
 
 
-def _windows_commondata_path():
-    # type: () -> str
+def _windows_commondata_path() -> str:
     """Return the common appdata path, using ctypes
     From http://stackoverflow.com/questions/626796/\
     how-do-i-find-the-windows-common-application-data-folder-using-python
     """
     import ctypes
     from ctypes import wintypes
-    ctypes_any = ctypes  # type: Any
+    ctypes_any: Any = ctypes
     windll = ctypes_any.windll
 
     CSIDL_COMMON_APPDATA = 35
@@ -68,8 +62,7 @@ def _windows_commondata_path():
     return path_buf.value
 
 
-def _windows_config_path():
-    # type: () -> str
+def _windows_config_path() -> str:
     common_data = _windows_commondata_path()
     path = os.path.join(common_data, "Datadog", DATADOG_CONF)
     if os.path.exists(path):
@@ -77,16 +70,14 @@ def _windows_config_path():
     raise PathNotFound(path)
 
 
-def _unix_config_path():
-    # type: () -> str
+def _unix_config_path() -> str:
     path = os.path.join("/etc/dd-agent", DATADOG_CONF)
     if os.path.exists(path):
         return path
     raise PathNotFound(path)
 
 
-def _mac_config_path():
-    # type: () -> str
+def _mac_config_path() -> str:
     path = os.path.join("~/.datadog-agent/agent", DATADOG_CONF)
     path = os.path.expanduser(path)
     if os.path.exists(path):
@@ -94,8 +85,7 @@ def _mac_config_path():
     raise PathNotFound(path)
 
 
-def get_config_path(cfg_path=None, os_name=None):
-    # type: (Optional[str], Optional[str]) -> str
+def get_config_path(cfg_path: Optional[str] = None, os_name: Optional[str] = None) -> str:
     # Check if there's an override and if it exists
     if cfg_path is not None and os.path.exists(cfg_path):
         return cfg_path
@@ -112,9 +102,8 @@ def get_config_path(cfg_path=None, os_name=None):
         return _unix_config_path()
 
 
-def get_config(cfg_path=None, options=None):
-    # type: (Optional[str], Optional[List[str]]) -> Dict[str, str]
-    agentConfig = {}  # type: Dict[str, str]
+def get_config(cfg_path: Optional[str] = None, options: Optional[List[str]] = None) -> Dict[str, str]:
+    agentConfig: Dict[str, str] = {}
 
     # Config handling
     try:
@@ -122,13 +111,13 @@ def get_config(cfg_path=None, options=None):
         path = os.path.realpath(__file__)
         path = os.path.dirname(path)
 
+        # Imported lazily to keep `import datadog` fast (e.g. in serverless environments).
+        import configparser
+
         config_path = get_config_path(cfg_path, os_name=get_os())
         config = configparser.ConfigParser()
         with open(config_path) as config_file:
-            if is_p3k():
-                config.read_file(skip_leading_wsp(config_file))
-            else:
-                config.readfp(skip_leading_wsp(config_file))
+            config.read_file(skip_leading_wsp(config_file))
 
         # bulk import
         for option in config.options("Main"):
@@ -140,8 +129,7 @@ def get_config(cfg_path=None, options=None):
     return agentConfig
 
 
-def get_pkg_version():
-    # type: () -> str
+def get_pkg_version() -> str:
     """
     Resolve `datadog` package version.
 
@@ -150,8 +138,7 @@ def get_pkg_version():
     return __version__
 
 
-def get_version():
-    # type: () -> str
+def get_version() -> str:
     """
     Resolve `datadog` package version.
 
