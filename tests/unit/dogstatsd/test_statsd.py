@@ -667,6 +667,54 @@ class TestDogStatsd(unittest.TestCase):
         self.statsd.timing('t', 123)
         self.assert_equal_telemetry('t:123|ms\n', self.recv(2))
 
+    def test_distribution(self):
+        self.statsd.distribution('dist', 123.4)
+        self.assert_equal_telemetry('dist:123.4|d\n', self.recv(2))
+
+        self.statsd._reset_telemetry()
+        self.statsd.distribution('dist', 2, tags=['a:b'], sample_rate=1)
+        self.assert_equal_telemetry('dist:2|d|#a:b\n', self.recv(2, reset_wait=True))
+
+    def test_wire_bytes_are_utf8_encoded(self):
+        # Assert the raw bytes handed to the socket (not the decoded text) for
+        # every packet kind, including non-ASCII content.
+        statsd = DogStatsd(disable_telemetry=True, disable_buffering=True, origin_detection_enabled=False)
+        statsd.socket = FakeSocket()
+        statsd.constant_tags = ['env:prød']
+        statsd._container_id = 'cid'
+        try:
+            statsd.increment('ct', tags=['country:españa'], sample_rate=1)
+            statsd.gauge('g', 1.5, sample_rate=0.999999999)
+            statsd.event('Tïtle', '♬ L1\nL2', date_happened=1375296969, priority='low', tags=['t1'])
+            statsd.service_check('chk', statsd.OK, timestamp=1375296969, hostname='h', message='♪ m: ok')
+            payloads = list(statsd.socket.payloads)
+        finally:
+            statsd.stop()
+
+        expected = [
+            'ct:1|c|#country:españa,env:prød|c:cid\n'.encode('utf-8'),
+            'g:1.5|g|@0.999999999|#env:prød|c:cid\n'.encode('utf-8'),
+            '_e{6,10}:Tïtle|♬ L1\\nL2|d:1375296969|p:low|#t1,env:prød|c:cid\n'.encode('utf-8'),
+            '_sc|chk|0|d:1375296969|h:h|#env:prød|m:♪ m\\: ok|c:cid\n'.encode('utf-8'),
+        ]
+        self.assertEqual(len(expected), len(payloads))
+        for want, got in zip(expected, payloads):
+            self.assertIsInstance(got, bytes)
+            self.assertEqual(want, got)
+
+    def test_wire_bytes_uds_stream_framing(self):
+        statsd = DogStatsd(disable_telemetry=True, disable_buffering=True, origin_detection_enabled=False)
+        statsd.socket = FakeSocket(socket_kind=socket.SOCK_STREAM, socket_path='/fake.sock')
+        statsd._transport = 'uds'
+        try:
+            statsd.gauge('g', 1, tags=['k:ü'])
+            payloads = list(statsd.socket.payloads)
+        finally:
+            statsd.stop()
+
+        body = 'g:1|g|#k:ü\n'.encode('utf-8')
+        self.assertEqual([struct.pack('<I', len(body)), body], payloads)
+
     def test_event(self):
         self.statsd.event(
             'Title',
