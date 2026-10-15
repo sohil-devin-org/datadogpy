@@ -9,7 +9,7 @@ Reporter classes.
 from datadog import api
 
 
-class Reporter(object):
+class Reporter:
     def flush(self, metrics):
         raise NotImplementedError
 

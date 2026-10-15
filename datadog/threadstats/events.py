@@ -6,7 +6,7 @@ Event aggregator class.
 """
 
 
-class EventsAggregator(object):
+class EventsAggregator:
     """
     A simple event aggregator
     """
