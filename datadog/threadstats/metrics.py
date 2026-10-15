@@ -9,11 +9,10 @@ import random
 import itertools
 import threading
 
-from datadog.util.compat import iternext
 from datadog.threadstats.constants import MetricType
 
 
-class Metric(object):
+class Metric:
     """
     A base metric class that accepts points, slices them into time intervals
     and performs roll-ups within those intervals.
@@ -114,7 +113,7 @@ class Histogram(Metric):
         self.min = float("inf")
         self.sum = []
         self.iter_counter = itertools.count()
-        self.count = iternext(self.iter_counter)
+        self.count = next(self.iter_counter)
         self.sample_size = 1000
         self.samples = []
         self.percentiles = [0.75, 0.85, 0.95, 0.99]
@@ -127,7 +126,7 @@ class Histogram(Metric):
             self.samples.append(value)
         else:
             self.samples[random.randrange(0, self.sample_size)] = value
-        self.count = iternext(self.iter_counter)
+        self.count = next(self.iter_counter)
 
     def flush(self, timestamp, interval):
         if not self.count:
@@ -168,7 +167,7 @@ class Timing(Histogram):
     stats_tag = "ms"
 
 
-class MetricsAggregator(object):
+class MetricsAggregator:
     """
     A small class to handle the roll-ups of multiple metrics at once.
     """
