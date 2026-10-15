@@ -783,6 +783,17 @@ class TestDogStatsd(unittest.TestCase):
         self.assertEqual(len(expected_telemetry), statsd.bytes_dropped_writer)
         self.assertEqual(1, statsd.packets_dropped_writer)
 
+    def test_bytes_dropped_writer_unencodable_packet(self):
+        statsd = DogStatsd(telemetry_min_flush_interval=10000)
+        statsd._reset_telemetry()
+
+        with patch.object(statsd, "get_socket", return_value=FakeSocket()):
+            statsd.event("deploy", u"bad \ud800")
+
+        self.assertEqual(0, statsd.bytes_sent)
+        self.assertEqual(1, statsd.packets_dropped_writer)
+        self.assertEqual(len(u"_e{6,5}:deploy|bad ?\n"), statsd.bytes_dropped_writer)
+
     # Positional arg names should match threadstats
     def test_event_matching_signature(self):
         self.statsd.event(title="foo", message="bar1")
