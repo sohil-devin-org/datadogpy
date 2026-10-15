@@ -2,18 +2,12 @@
 # This product includes software developed at Datadog (https://www.datadoghq.com/).
 # Copyright 2015-Present Datadog, Inc
 from numbers import Number
-import sys
 import time
+from collections.abc import Iterable
 from typing import Any, List, Tuple, cast
 
-if sys.version_info[0] >= 3:
-    from collections.abc import Iterable
-else:
-    from collections import Iterable
 
-
-def format_points(points):
-    # type: (Any) -> List[Tuple[float, Any]]
+def format_points(points: Any) -> List[Tuple[float, Any]]:
     """
     Format `points` parameter.
 
@@ -28,11 +22,11 @@ def format_points(points):
     if not isinstance(points, list):
         points = [points]
 
-    formatted_points = []  # type: List[Tuple[float, Any]]
+    formatted_points: List[Tuple[float, Any]] = []
     for point in points:
         if isinstance(point, Number):
             timestamp = now
-            value = float(cast(float, point))  # type: Any
+            value: Any = float(cast(float, point))
         # Distributions contain a list of points
         else:
             timestamp = point[0]

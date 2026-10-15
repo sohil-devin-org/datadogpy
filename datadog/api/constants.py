@@ -3,7 +3,7 @@
 # Copyright 2015-Present Datadog, Inc
 
 
-class CheckStatus(object):
+class CheckStatus:
     OK = 0
     WARNING = 1
     CRITICAL = 2
@@ -11,7 +11,7 @@ class CheckStatus(object):
     ALL = (OK, WARNING, CRITICAL, UNKNOWN)
 
 
-class MonitorType(object):
+class MonitorType:
     # From https://docs.datadoghq.com/api/?lang=bash#create-a-monitor
     QUERY_ALERT = "query alert"
     COMPOSITE = "composite"

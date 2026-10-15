@@ -28,8 +28,7 @@ class Monitor(
     _resource_name = "monitor"
 
     @classmethod
-    def get(cls, id, **params):
-        # type: (Any, **Any) -> Any
+    def get(cls, id: Any, **params: Any) -> Any:
         """
         Get monitor's details.
 
@@ -45,11 +44,10 @@ class Monitor(
         if "group_states" in params and isinstance(params["group_states"], list):
             params["group_states"] = ",".join(params["group_states"])
 
-        return super(Monitor, cls).get(id, **params)
+        return super().get(id, **params)
 
     @classmethod
-    def get_all(cls, **params):
-        # type: (**Any) -> Any
+    def get_all(cls, **params: Any) -> Any:
         """
         Get all monitor details.
 
@@ -73,11 +71,10 @@ class Monitor(
             if p in params and isinstance(params[p], list):
                 params[p] = ",".join(params[p])
 
-        return super(Monitor, cls).get_all(**params)
+        return super().get_all(**params)
 
     @classmethod
-    def mute(cls, id, **body):
-        # type: (Any, **Any) -> Any
+    def mute(cls, id: Any, **body: Any) -> Any:
         """
         Mute a monitor.
 
@@ -90,11 +87,10 @@ class Monitor(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Monitor, cls)._trigger_class_action("POST", "mute", id, **body)
+        return super()._trigger_class_action("POST", "mute", id, **body)
 
     @classmethod
-    def unmute(cls, id, **body):
-        # type: (Any, **Any) -> Any
+    def unmute(cls, id: Any, **body: Any) -> Any:
         """
         Unmute a monitor.
 
@@ -106,64 +102,58 @@ class Monitor(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Monitor, cls)._trigger_class_action("POST", "unmute", id, **body)
+        return super()._trigger_class_action("POST", "unmute", id, **body)
 
     @classmethod
-    def mute_all(cls):
-        # type: () -> Any
+    def mute_all(cls) -> Any:
         """
         Globally mute monitors.
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Monitor, cls)._trigger_class_action("POST", "mute_all")
+        return super()._trigger_class_action("POST", "mute_all")
 
     @classmethod
-    def unmute_all(cls):
-        # type: () -> Any
+    def unmute_all(cls) -> Any:
         """
         Cancel global monitor mute setting (does not remove mute settings for individual monitors).
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Monitor, cls)._trigger_class_action("POST", "unmute_all")
+        return super()._trigger_class_action("POST", "unmute_all")
 
     @classmethod
-    def search(cls, **params):
-        # type: (**Any) -> Any
+    def search(cls, **params: Any) -> Any:
         """
         Search monitors.
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Monitor, cls)._trigger_class_action("GET", "search", params=params)
+        return super()._trigger_class_action("GET", "search", params=params)
 
     @classmethod
-    def search_groups(cls, **params):
-        # type: (**Any) -> Any
+    def search_groups(cls, **params: Any) -> Any:
         """
         Search monitor groups.
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Monitor, cls)._trigger_class_action("GET", "groups/search", params=params)
+        return super()._trigger_class_action("GET", "groups/search", params=params)
 
     @classmethod
-    def can_delete(cls, **params):
-        # type: (**Any) -> Any
+    def can_delete(cls, **params: Any) -> Any:
         """
         Checks if the monitors corresponding to the monitor ids can be deleted.
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Monitor, cls)._trigger_class_action("GET", "can_delete", params=params)
+        return super()._trigger_class_action("GET", "can_delete", params=params)
 
     @classmethod
-    def validate(cls, **body):
-        # type: (**Any) -> Any
+    def validate(cls, **body: Any) -> Any:
         """
         Checks if the monitors definition is valid.
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Monitor, cls)._trigger_class_action("POST", "validate", **body)
+        return super()._trigger_class_action("POST", "validate", **body)

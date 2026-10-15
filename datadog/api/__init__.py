@@ -3,18 +3,14 @@
 # Copyright 2015-Present Datadog, Inc
 # flake8: noqa
 
-import sys
-
-
-if sys.version_info[0] >= 3:
-    from typing import Optional  # noqa: F401
+from typing import Optional
 
 # API settings
-_api_key = None  # type: Optional[str]
-_application_key = None  # type: Optional[str]
+_api_key: Optional[str] = None
+_application_key: Optional[str] = None
 _api_version = "v1"
-_api_host = None  # type: Optional[str]
-_host_name = None  # type: Optional[str]
+_api_host: Optional[str] = None
+_host_name: Optional[str] = None
 _hostname_from_config = True
 _cacert = True
 

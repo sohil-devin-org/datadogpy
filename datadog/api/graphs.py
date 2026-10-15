@@ -3,7 +3,7 @@
 # Copyright 2015-Present Datadog, Inc
 from typing import Any, Dict, Optional
 
-from datadog.util.compat import urlparse
+from urllib.parse import urlparse
 from datadog.api.resources import CreateableAPIResource, ActionAPIResource, GetableAPIResource, ListableAPIResource
 
 
@@ -15,8 +15,12 @@ class Graph(CreateableAPIResource, ActionAPIResource):
     _resource_name = "graph/snapshot"
 
     @classmethod
-    def create(cls, attach_host_name=False, method="GET", id=None, params=None, **body):
-        # type: (bool, str, Optional[Any], Optional[Dict[str, Any]], **Any) -> Any
+    def create(cls,
+               attach_host_name: bool = False,
+               method: str = "GET",
+               id: Optional[Any] = None,
+               params: Optional[Dict[str, Any]] = None,
+               **body: Any) -> Any:
         """
         Take a snapshot of a graph, returning the full url to the snapshot.
 
@@ -34,11 +38,10 @@ class Graph(CreateableAPIResource, ActionAPIResource):
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Graph, cls).create(method="GET", **body)
+        return super().create(method="GET", **body)
 
     @classmethod
-    def status(cls, snapshot_url):
-        # type: (str) -> Any
+    def status(cls, snapshot_url: str) -> Any:
         """
         Returns the status code of snapshot. Can be used to know when the
         snapshot is ready for download.
@@ -53,7 +56,7 @@ class Graph(CreateableAPIResource, ActionAPIResource):
 
         snapshot_status_url = "graph/snapshot_status/{0}".format(snap_path)
 
-        return super(Graph, cls)._trigger_action("GET", snapshot_status_url)
+        return super()._trigger_action("GET", snapshot_status_url)
 
 
 class Embed(ListableAPIResource, GetableAPIResource, ActionAPIResource, CreateableAPIResource):
@@ -64,8 +67,7 @@ class Embed(ListableAPIResource, GetableAPIResource, ActionAPIResource, Createab
     _resource_name = "graph/embed"
 
     @classmethod
-    def enable(cls, embed_id):
-        # type: (str) -> Any
+    def enable(cls, embed_id: str) -> Any:
         """
         Enable a specified embed.
 
@@ -74,11 +76,10 @@ class Embed(ListableAPIResource, GetableAPIResource, ActionAPIResource, Createab
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Embed, cls)._trigger_class_action("GET", id=embed_id, action_name="enable")
+        return super()._trigger_class_action("GET", id=embed_id, action_name="enable")
 
     @classmethod
-    def revoke(cls, embed_id):
-        # type: (str) -> Any
+    def revoke(cls, embed_id: str) -> Any:
         """
         Revoke a specified embed.
 
@@ -87,4 +88,4 @@ class Embed(ListableAPIResource, GetableAPIResource, ActionAPIResource, Createab
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Embed, cls)._trigger_class_action("GET", id=embed_id, action_name="revoke")
+        return super()._trigger_class_action("GET", id=embed_id, action_name="revoke")
