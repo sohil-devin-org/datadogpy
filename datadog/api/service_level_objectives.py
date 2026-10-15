@@ -29,20 +29,23 @@ class ServiceLevelObjective(
     _resource_name = "slo"
 
     @classmethod
-    def create(cls, attach_host_name=False, method="POST", id=None, params=None, **body):
-        # type: (bool, str, Optional[Any], Optional[Any], **Any) -> Any
+    def create(cls,
+               attach_host_name: bool = False,
+               method: str = "POST",
+               id: Optional[Any] = None,
+               params: Optional[Any] = None,
+               **body: Any) -> Any:
         """
         Create a SLO
 
         :returns: created SLO details
         """
-        return super(ServiceLevelObjective, cls).create(
+        return super().create(
             attach_host_name=False, method="POST", id=None, params=params, **body
         )
 
     @classmethod
-    def get(cls, id, **params):
-        # type: (str, **Any) -> Any
+    def get(cls, id: str, **params: Any) -> Any:
         """
         Get a specific SLO details.
 
@@ -51,11 +54,17 @@ class ServiceLevelObjective(
 
         :returns: SLO details
         """
-        return super(ServiceLevelObjective, cls).get(id, **params)
+        return super().get(id, **params)
 
     @classmethod
-    def get_all(cls, query=None, tags_query=None, metrics_query=None, ids=None, offset=0, limit=100, **params):
-        # type: (Optional[str], Optional[str], Optional[str], Optional[List[str]], int, int, **Any) -> Any
+    def get_all(cls,
+                query: Optional[str] = None,
+                tags_query: Optional[str] = None,
+                metrics_query: Optional[str] = None,
+                ids: Optional[List[str]] = None,
+                offset: int = 0,
+                limit: int = 100,
+                **params: Any) -> Any:
         """
         Get all SLO details.
 
@@ -79,7 +88,7 @@ class ServiceLevelObjective(
 
         :returns: SLOs matching the query
         """
-        search_terms = {}  # type: Dict[str, Any]
+        search_terms: Dict[str, Any] = {}
         if query:
             search_terms["query"] = query
         if ids:
@@ -91,11 +100,10 @@ class ServiceLevelObjective(
         search_terms["offset"] = offset
         search_terms["limit"] = limit
 
-        return super(ServiceLevelObjective, cls).get_all(**search_terms)
+        return super().get_all(**search_terms)
 
     @classmethod
-    def update(cls, id, params=None, **body):
-        # type: (str, Optional[Any], **Any) -> Any
+    def update(cls, id: str, params: Optional[Any] = None, **body: Any) -> Any:
         """
         Update a specific SLO details.
 
@@ -104,11 +112,10 @@ class ServiceLevelObjective(
 
         :returns: SLO details
         """
-        return super(ServiceLevelObjective, cls).update(id, params, **body)
+        return super().update(id, params, **body)
 
     @classmethod
-    def delete(cls, id, **params):
-        # type: (str, **Any) -> Any
+    def delete(cls, id: str, **params: Any) -> Any:
         """
         Delete a specific SLO.
 
@@ -117,11 +124,10 @@ class ServiceLevelObjective(
 
         :returns: SLO ids removed
         """
-        return super(ServiceLevelObjective, cls).delete(id, **params)
+        return super().delete(id, **params)
 
     @classmethod
-    def bulk_delete(cls, ops, **params):
-        # type: (Dict[str, List[str]], **Any) -> Any
+    def bulk_delete(cls, ops: Dict[str, List[str]], **params: Any) -> Any:
         """
         Bulk Delete Timeframes from multiple SLOs.
 
@@ -132,7 +138,7 @@ class ServiceLevelObjective(
             `errors` - errors with operation
             `data` - updates and deletions
         """
-        return super(ServiceLevelObjective, cls)._trigger_class_action(
+        return super()._trigger_class_action(
             "POST",
             "bulk_delete",
             body=ops,
@@ -141,8 +147,7 @@ class ServiceLevelObjective(
         )
 
     @classmethod
-    def delete_many(cls, ids, **params):
-        # type: (List[str], **Any) -> Any
+    def delete_many(cls, ids: List[str], **params: Any) -> Any:
         """
         Delete Multiple SLOs
 
@@ -151,7 +156,7 @@ class ServiceLevelObjective(
 
         :returns: Dictionary representing the API's JSON response see `data` list(slo ids) && `errors`
         """
-        return super(ServiceLevelObjective, cls)._trigger_class_action(
+        return super()._trigger_class_action(
             "DELETE",
             "",
             params=params,
@@ -160,8 +165,7 @@ class ServiceLevelObjective(
         )
 
     @classmethod
-    def can_delete(cls, ids, **params):
-        # type: (List[str], **Any) -> Any
+    def can_delete(cls, ids: List[str], **params: Any) -> Any:
         """
         Check if the following SLOs can be safely deleted.
 
@@ -175,7 +179,7 @@ class ServiceLevelObjective(
                   "errors" contains a dictionary of SLO ID to known reference(s).
         """
         params["ids"] = ids
-        return super(ServiceLevelObjective, cls)._trigger_class_action(
+        return super()._trigger_class_action(
             "GET",
             "can_delete",
             params=params,
@@ -184,8 +188,7 @@ class ServiceLevelObjective(
         )
 
     @classmethod
-    def history(cls, id, from_ts, to_ts, **params):
-        # type: (str, Any, Any, **Any) -> Any
+    def history(cls, id: str, from_ts: Any, to_ts: Any, **params: Any) -> Any:
         """
         Get the SLO's history from the given time range.
 
@@ -205,7 +208,7 @@ class ServiceLevelObjective(
         params["id"] = id
         params["from_ts"] = force_to_epoch_seconds(from_ts)
         params["to_ts"] = force_to_epoch_seconds(to_ts)
-        return super(ServiceLevelObjective, cls)._trigger_class_action(
+        return super()._trigger_class_action(
             "GET",
             "history",
             id=id,
@@ -215,11 +218,10 @@ class ServiceLevelObjective(
         )
 
     @classmethod
-    def search(cls, **params):
-        # type: (**Any) -> Any
+    def search(cls, **params: Any) -> Any:
         """
         Search SLOs.
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(ServiceLevelObjective, cls)._trigger_class_action("GET", "search", params=params)
+        return super()._trigger_class_action("GET", "search", params=params)

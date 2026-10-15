@@ -6,23 +6,18 @@ import json
 import logging
 import time
 import zlib
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 # datadog
 from datadog.api import _api_version, _max_timeouts, _backoff_period
 from datadog.api.exceptions import ClientError, ApiError, HttpBackoff, HttpTimeout, ApiNotInitialized
-from datadog.api.http_client import resolve_http_client
-from datadog.util.compat import is_p3k
+from datadog.api.http_client import HTTPClient, resolve_http_client
 from datadog.util.format import construct_url, normalize_tags
-
-if TYPE_CHECKING:
-    from datadog.api.http_client import HTTPClient  # noqa: F401
-
 
 log = logging.getLogger("datadog.api")
 
 
-class APIClient(object):
+class APIClient:
     """
     Datadog API client: format and submit API calls to Datadog.
     Embeds a HTTP client.
@@ -31,7 +26,7 @@ class APIClient(object):
     # HTTP transport parameters
     _backoff_period = _backoff_period
     _max_timeouts = _max_timeouts
-    _backoff_timestamp = None  # type: Optional[float]
+    _backoff_timestamp: Optional[float] = None
     _timeout_counter = 0
     _sort_keys = False
 
@@ -39,8 +34,7 @@ class APIClient(object):
     _http_client = None
 
     @classmethod
-    def _get_http_client(cls):
-        # type: () -> Type[HTTPClient]
+    def _get_http_client(cls) -> Type[HTTPClient]:
         """
         Getter for the embedded HTTP client.
         """
@@ -52,18 +46,17 @@ class APIClient(object):
     @classmethod
     def submit(
         cls,
-        method,  # type: str
-        path,  # type: str
-        api_version=None,  # type: Optional[str]
-        body=None,  # type: Optional[Any]
-        attach_host_name=False,  # type: bool
-        response_formatter=None,  # type: Optional[Any]
-        error_formatter=None,  # type: Optional[Any]
-        suppress_response_errors_on_codes=None,  # type: Optional[List[int]]
-        compress_payload=False,  # type: bool
-        **params  # type: Any
-    ):
-        # type: (...) -> Any
+        method: str,
+        path: str,
+        api_version: Optional[str] = None,
+        body: Optional[Any] = None,
+        attach_host_name: bool = False,
+        response_formatter: Optional[Any] = None,
+        error_formatter: Optional[Any] = None,
+        suppress_response_errors_on_codes: Optional[List[int]] = None,
+        compress_payload: bool = False,
+        **params: Any
+    ) -> Any:
         """
         Make an HTTP API request
 
@@ -199,10 +192,7 @@ class APIClient(object):
 
             if content:
                 try:
-                    if is_p3k():
-                        response_obj = json.loads(content.decode("utf-8"))
-                    else:
-                        response_obj = json.loads(content)
+                    response_obj = json.loads(content.decode("utf-8"))
                 except ValueError:
                     raise ValueError("Invalid JSON response: {0}".format(content))
 
@@ -250,8 +240,7 @@ class APIClient(object):
                 raise
 
     @classmethod
-    def _should_submit(cls):
-        # type: () -> bool
+    def _should_submit(cls) -> bool:
         """
         Returns True if we're in a state where we should make a request
         (backoff expired, no backoff in effect), false otherwise.
@@ -295,8 +284,7 @@ class APIClient(object):
         return should_submit
 
     @classmethod
-    def _backoff_status(cls):
-        # type: () -> Tuple[float, float]
+    def _backoff_status(cls) -> Tuple[float, float]:
         """
         Get a backoff report, i.e. backoff total and remaining time.
         """

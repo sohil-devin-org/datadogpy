@@ -27,21 +27,24 @@ class AwsIntegration(
 
     _resource_name = "integration"
     _resource_id = "aws"
-    _sub_resource_name = ""  # type: str
+    _sub_resource_name: str = ""
 
     @classmethod
-    def list(cls, **params):
-        # type: (**Any) -> Any
+    def list(cls, **params: Any) -> Any:
         """
         List all Datadog-AWS integrations available in your Datadog organization.
 
         >>> api.AwsIntegration.list()
         """
-        return super(AwsIntegration, cls).get(id=cls._resource_id, **params)
+        return super().get(id=cls._resource_id, **params)
 
     @classmethod
-    def create(cls, attach_host_name=False, method="POST", id=None, params=None, **body):
-        # type: (bool, str, Optional[Any], Optional[Any], **Any) -> Any
+    def create(cls,
+               attach_host_name: bool = False,
+               method: str = "POST",
+               id: Optional[Any] = None,
+               params: Optional[Any] = None,
+               **body: Any) -> Any:
         """
         Add a new AWS integration config.
 
@@ -99,11 +102,10 @@ class AwsIntegration(
         account_specific_namespace_rules=account_specific_namespace_rules \
         excluded_regions=excluded_regions)
         """
-        return super(AwsIntegration, cls).create(id=cls._resource_id, **body)
+        return super().create(id=cls._resource_id, **body)
 
     @classmethod
-    def update(cls, id=None, params=None, **body):
-        # type: (Optional[Any], Optional[Any], **Any) -> Any
+    def update(cls, id: Optional[Any] = None, params: Optional[Any] = None, **body: Any) -> Any:
         """
         Update an AWS integration config.
 
@@ -216,11 +218,10 @@ class AwsIntegration(
                 body["access_key_id"] = body.pop("new_access_key_id")
             if body.get("new_secret_access_key"):
                 body["secret_access_key"] = body.pop("new_secret_access_key")
-        return super(AwsIntegration, cls).update(id=cls._resource_id, params=params, **body)
+        return super().update(id=cls._resource_id, params=params, **body)
 
     @classmethod
-    def delete(cls, id=None, **body):
-        # type: (Optional[Any], **Any) -> Any
+    def delete(cls, id: Optional[Any] = None, **body: Any) -> Any:
         """
         Delete a given Datadog-AWS integration.
 
@@ -229,22 +230,20 @@ class AwsIntegration(
 
         >>> api.AwsIntegration.delete()
         """
-        return super(AwsIntegration, cls).delete(id=cls._resource_id, body=body)
+        return super().delete(id=cls._resource_id, body=body)
 
     @classmethod
-    def list_namespace_rules(cls, **params):
-        # type: (**Any) -> Any
+    def list_namespace_rules(cls, **params: Any) -> Any:
         """
         List all namespace rules available as options.
 
         >>> api.AwsIntegration.list_namespace_rules()
         """
         cls._sub_resource_name = "available_namespace_rules"
-        return super(AwsIntegration, cls).get_items(id=cls._resource_id, **params)
+        return super().get_items(id=cls._resource_id, **params)
 
     @classmethod
-    def generate_new_external_id(cls, **params):
-        # type: (**Any) -> Any
+    def generate_new_external_id(cls, **params: Any) -> Any:
         """
         Generate a new AWS external id for a given AWS account id and role name pair.
 
@@ -254,4 +253,4 @@ class AwsIntegration(
         >>> api.AwsIntegration.generate_new_external_id()
         """
         cls._sub_resource_name = "generate_new_external_id"
-        return super(AwsIntegration, cls).update_items(id=cls._resource_id, **params)
+        return super().update_items(id=cls._resource_id, **params)

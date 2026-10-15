@@ -21,21 +21,24 @@ class AzureIntegration(
 
     _resource_name = "integration"
     _resource_id = "azure"
-    _sub_resource_name = ""  # type: str
+    _sub_resource_name: str = ""
 
     @classmethod
-    def list(cls, **params):
-        # type: (**Any) -> Any
+    def list(cls, **params: Any) -> Any:
         """
         List all Datadog-Azure integrations available in your Datadog organization.
 
         >>> api.AzureIntegration.list()
         """
-        return super(AzureIntegration, cls).get(id=cls._resource_id, **params)
+        return super().get(id=cls._resource_id, **params)
 
     @classmethod
-    def create(cls, attach_host_name=False, method="POST", id=None, params=None, **body):
-        # type: (bool, str, Optional[Any], Optional[Dict[str, Any]], **Any) -> Any
+    def create(cls,
+               attach_host_name: bool = False,
+               method: str = "POST",
+               id: Optional[Any] = None,
+               params: Optional[Dict[str, Any]] = None,
+               **body: Any) -> Any:
         """
         Add a new Azure integration config.
 
@@ -47,11 +50,10 @@ class AzureIntegration(
         >>> api.AzureIntegration.create(tenant_name=tenant_name, client_id=client_id, \
         client_secret=client_secret,host_filters=host_filters)
         """
-        return super(AzureIntegration, cls).create(id=cls._resource_id, **body)
+        return super().create(id=cls._resource_id, **body)
 
     @classmethod
-    def delete(cls, id=None, **body):
-        # type: (Optional[Any], **Any) -> Any
+    def delete(cls, id: Optional[Any] = None, **body: Any) -> Any:
         """
         Delete a given Datadog-Azure integration.
 
@@ -60,11 +62,10 @@ class AzureIntegration(
 
         >>> api.AzureIntegration.delete(tenant_name=tenant_name, client_id=client_id)
         """
-        return super(AzureIntegration, cls).delete(id=cls._resource_id, body=body)
+        return super().delete(id=cls._resource_id, body=body)
 
     @classmethod
-    def update_host_filters(cls, **params):
-        # type: (**Any) -> Any
+    def update_host_filters(cls, **params: Any) -> Any:
         """
         Update the defined list of host filters for a given Datadog-Azure integration. \
 
@@ -76,11 +77,10 @@ class AzureIntegration(
             host_filters=host_filters)
         """
         cls._sub_resource_name = "host_filters"
-        return super(AzureIntegration, cls).add_items(id=cls._resource_id, **params)
+        return super().add_items(id=cls._resource_id, **params)
 
     @classmethod
-    def update(cls, id=None, params=None, **body):
-        # type: (Optional[Any], Optional[Dict[str, Any]], **Any) -> Any
+    def update(cls, id: Optional[Any] = None, params: Optional[Dict[str, Any]] = None, **body: Any) -> Any:
         """
         Update an Azure account configuration.
 
@@ -95,5 +95,5 @@ class AzureIntegration(
         new_tenant_name=new_tenant_name, new_client_id=new_client_id,\
         client_secret=client_secret, host_filters=host_filters)
         """
-        actual_params = {}  # type: Dict[str, Any]
-        return super(AzureIntegration, cls).update(id=cls._resource_id, params=actual_params, **body)
+        actual_params: Dict[str, Any] = {}
+        return super().update(id=cls._resource_id, params=actual_params, **body)
