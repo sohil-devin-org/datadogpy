@@ -28,8 +28,7 @@ class Downtime(
     _resource_name = "downtime"
 
     @classmethod
-    def cancel_downtime_by_scope(cls, **body):
-        # type: (**Any) -> Any
+    def cancel_downtime_by_scope(cls, **body: Any) -> Any:
         """
         Cancels all downtimes matching the scope.
 
@@ -38,4 +37,4 @@ class Downtime(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Downtime, cls)._trigger_class_action("POST", "cancel/by_scope", **body)
+        return super()._trigger_class_action("POST", "cancel/by_scope", **body)

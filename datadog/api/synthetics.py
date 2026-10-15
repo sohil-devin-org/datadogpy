@@ -30,8 +30,7 @@ class Synthetics(
     _sub_resource_name = "status"
 
     @classmethod
-    def get_test(cls, id, **params):
-        # type: (str, **Any) -> Any
+    def get_test(cls, id: str, **params: Any) -> Any:
         """
         Get test's details.
 
@@ -45,11 +44,10 @@ class Synthetics(
 
         name = "tests"
 
-        return super(Synthetics, cls)._trigger_synthetics_class_action("GET", id=id, name=name, params=params)
+        return super()._trigger_synthetics_class_action("GET", id=id, name=name, params=params)
 
     @classmethod
-    def get_all_tests(cls, **params):
-        # type: (**Any) -> Any
+    def get_all_tests(cls, **params: Any) -> Any:
         """
         Get all tests' details.
 
@@ -62,11 +60,10 @@ class Synthetics(
 
         # API path = "synthetics/tests"
 
-        return super(Synthetics, cls).get(id="tests", params=params)
+        return super().get(id="tests", params=params)
 
     @classmethod
-    def get_devices(cls, **params):
-        # type: (**Any) -> Any
+    def get_devices(cls, **params: Any) -> Any:
         """
         Get a list of devices for browser checks
 
@@ -77,11 +74,10 @@ class Synthetics(
 
         name = "browser/devices"
 
-        return super(Synthetics, cls)._trigger_synthetics_class_action("GET", name=name, params=params)
+        return super()._trigger_synthetics_class_action("GET", name=name, params=params)
 
     @classmethod
-    def get_locations(cls, **params):
-        # type: (**Any) -> Any
+    def get_locations(cls, **params: Any) -> Any:
         """
         Get a list of all available locations
 
@@ -92,11 +88,10 @@ class Synthetics(
 
         # API path = "synthetics/locations
 
-        return super(Synthetics, cls)._trigger_synthetics_class_action("GET", name=name, params=params)
+        return super()._trigger_synthetics_class_action("GET", name=name, params=params)
 
     @classmethod
-    def get_results(cls, id, **params):
-        # type: (str, **Any) -> Any
+    def get_results(cls, id: str, **params: Any) -> Any:
         """
         Get the most recent results for a test
 
@@ -110,11 +105,10 @@ class Synthetics(
 
         path = "tests/{}/results".format(id)
 
-        return super(Synthetics, cls)._trigger_synthetics_class_action("GET", path, params=params)
+        return super()._trigger_synthetics_class_action("GET", path, params=params)
 
     @classmethod
-    def get_result(cls, id, result_id, **params):
-        # type: (str, str, **Any) -> Any
+    def get_result(cls, id: str, result_id: str, **params: Any) -> Any:
         """
         Get a specific result for a given test.
 
@@ -131,11 +125,10 @@ class Synthetics(
 
         path = "tests/{}/results/{}".format(id, result_id)
 
-        return super(Synthetics, cls)._trigger_synthetics_class_action("GET", path, params=params)
+        return super()._trigger_synthetics_class_action("GET", path, params=params)
 
     @classmethod
-    def create_test(cls, **params):
-        # type: (**Any) -> Any
+    def create_test(cls, **params: Any) -> Any:
         """
         Create a test
 
@@ -169,11 +162,10 @@ class Synthetics(
 
         # API path = "synthetics/tests"
 
-        return super(Synthetics, cls).create(id="tests", **params)
+        return super().create(id="tests", **params)
 
     @classmethod
-    def edit_test(cls, id, **params):
-        # type: (str, **Any) -> Any
+    def edit_test(cls, id: str, **params: Any) -> Any:
         """
         Edit a test
 
@@ -185,11 +177,10 @@ class Synthetics(
 
         # API path = "synthetics/tests/<public_test_id>"
 
-        return super(Synthetics, cls).update_synthetics(id=id, **params)
+        return super().update_synthetics(id=id, **params)
 
     @classmethod
-    def start_or_pause_test(cls, id, **body):
-        # type: (str, **Any) -> Any
+    def start_or_pause_test(cls, id: str, **body: Any) -> Any:
         """
         Pause a given test
 
@@ -204,11 +195,10 @@ class Synthetics(
 
         # API path = "synthetics/tests/<public_test_id>/status"
 
-        return super(Synthetics, cls).update_synthetics_items(id=id, **body)
+        return super().update_synthetics_items(id=id, **body)
 
     @classmethod
-    def delete_test(cls, **body):
-        # type: (**Any) -> Any
+    def delete_test(cls, **body: Any) -> Any:
         """
         Delete a test
 
@@ -223,4 +213,4 @@ class Synthetics(
 
         # API path = "synthetics/tests/delete
 
-        return super(Synthetics, cls)._trigger_action("POST", name="synthetics", id="tests/delete", **body)
+        return super()._trigger_action("POST", name="synthetics", id="tests/delete", **body)

@@ -13,10 +13,9 @@ from datadog import api
 from datadog.dogshell.common import report_errors, report_warnings
 
 
-class DashboardListClient(object):
+class DashboardListClient:
     @classmethod
-    def setup_parser(cls, subparsers):
-        # type: (argparse._SubParsersAction[argparse.ArgumentParser]) -> None
+    def setup_parser(cls, subparsers: "argparse._SubParsersAction[argparse.ArgumentParser]") -> None:
         parser = subparsers.add_parser("dashboard_list", help="Create, edit, and delete dashboard lists")
         verb_parsers = parser.add_subparsers(title="Verbs", dest="verb")
         verb_parsers.required = True
@@ -140,8 +139,7 @@ class DashboardListClient(object):
         delete_dashboards_v2_parser.set_defaults(func=cls._delete_dashboards_v2)
 
     @classmethod
-    def _post(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _post(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         name = args.name
@@ -156,8 +154,7 @@ class DashboardListClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _update(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _update(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         dashboard_list_id = args.dashboard_list_id
@@ -173,8 +170,7 @@ class DashboardListClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _show(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _show(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         dashboard_list_id = args.dashboard_list_id
@@ -189,8 +185,7 @@ class DashboardListClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _show_all(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _show_all(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
 
@@ -204,8 +199,7 @@ class DashboardListClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _delete(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _delete(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         dashboard_list_id = args.dashboard_list_id
@@ -220,8 +214,7 @@ class DashboardListClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _show_dashboards(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _show_dashboards(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         dashboard_list_id = args.dashboard_list_id
@@ -236,8 +229,7 @@ class DashboardListClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _show_dashboards_v2(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _show_dashboards_v2(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         dashboard_list_id = args.dashboard_list_id
@@ -252,8 +244,7 @@ class DashboardListClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _add_dashboards(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _add_dashboards(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         dashboard_list_id = args.dashboard_list_id
@@ -269,8 +260,7 @@ class DashboardListClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _add_dashboards_v2(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _add_dashboards_v2(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         dashboard_list_id = args.dashboard_list_id
@@ -286,8 +276,7 @@ class DashboardListClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _update_dashboards(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _update_dashboards(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         dashboard_list_id = args.dashboard_list_id
@@ -303,8 +292,7 @@ class DashboardListClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _update_dashboards_v2(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _update_dashboards_v2(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         dashboard_list_id = args.dashboard_list_id
@@ -320,8 +308,7 @@ class DashboardListClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _delete_dashboards(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _delete_dashboards(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         dashboard_list_id = args.dashboard_list_id
@@ -337,8 +324,7 @@ class DashboardListClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _delete_dashboards_v2(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _delete_dashboards_v2(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         dashboard_list_id = args.dashboard_list_id

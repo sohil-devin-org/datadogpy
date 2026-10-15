@@ -3,36 +3,19 @@
 # Copyright 2015-Present Datadog, Inc
 """
 Decorator `timed` for coroutine methods.
-
-Warning: requires Python 3.5 or higher.
 """
 # stdlib
-import sys
-
-if sys.version_info[:2] >= (3, 5):
-    from typing import Any, Callable  # noqa: F401
-
-
-# Wrap the Python 3.5+ function in a docstring to avoid syntax errors when
-# running mypy in --py2 mode. Currently there is no way to have mypy skip an
-# entire file if it has syntax errors. This solution is very hacky; another
-# option is to specify the source files to process in mypy.ini (using glob
-# inclusion patterns), and omit this file from the list.
-#
-# https://stackoverflow.com/a/57023749/3776794
-# https://github.com/python/mypy/issues/6897
-ASYNC_SOURCE = r'''
 from functools import wraps
+from time import monotonic
+from typing import Any, Callable
 
-from datadog.util.compat import monotonic
 
-
-def _get_wrapped_co(self, func):
+def _get_wrapped_co(self: Any, func: Callable[..., Any]) -> Callable[..., Any]:
     """
     `timed` wrapper for coroutine methods.
     """
     @wraps(func)
-    async def wrapped_co(*args, **kwargs):
+    async def wrapped_co(*args: Any, **kwargs: Any) -> Any:
         start = monotonic()
         try:
             result = await func(*args, **kwargs)
@@ -40,15 +23,3 @@ def _get_wrapped_co(self, func):
         finally:
             self._send(start)
     return wrapped_co
-'''
-
-
-def _get_wrapped_co(self, func):
-    # type: (Any, Callable[..., Any]) -> Callable[..., Any]
-    raise NotImplementedError(
-        u"Decorator `timed` compatibility with coroutine functions" u" requires Python 3.5 or higher."
-    )
-
-
-if sys.version_info >= (3, 5):
-    exec(compile(ASYNC_SOURCE, __file__, "exec"))

@@ -10,10 +10,9 @@ from datadog import api
 from datadog.dogshell.common import report_errors, report_warnings
 
 
-class MetricClient(object):
+class MetricClient:
     @classmethod
-    def setup_parser(cls, subparsers):
-        # type: (argparse._SubParsersAction[argparse.ArgumentParser]) -> None
+    def setup_parser(cls, subparsers: "argparse._SubParsersAction[argparse.ArgumentParser]") -> None:
         parser = subparsers.add_parser("metric", help="Post metrics.")
         verb_parsers = parser.add_subparsers(title="Verbs", dest="verb")
         verb_parsers.required = True
@@ -42,8 +41,7 @@ class MetricClient(object):
         parser.set_defaults(func=cls._post)
 
     @classmethod
-    def _post(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _post(cls, args: argparse.Namespace) -> None:
         """
         Post a metric.
         """
@@ -68,8 +66,8 @@ class MetricClient(object):
         if args.localhostname:
             # Warn about`--localhostname` command line flag deprecation
             res["warnings"].append(
-                u"`--localhostname` command line flag is deprecated, made default when no `--host` "
-                u"is specified. See the `--host` option for more information."
+                "`--localhostname` command line flag is deprecated, made default when no `--host` "
+                "is specified. See the `--host` option for more information."
             )
         report_warnings(res)
         report_errors(res)

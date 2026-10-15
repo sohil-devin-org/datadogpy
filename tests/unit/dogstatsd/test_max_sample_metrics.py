@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 import threading
 import unittest
-from mock import patch
+from unittest.mock import patch
 from datadog.dogstatsd.max_sample_metric import HistogramMetric, DistributionMetric, TimingMetric
 from datadog.dogstatsd.max_sample_metric_context import MaxSampleMetricContexts
 from datadog.dogstatsd.metric_types import MetricType

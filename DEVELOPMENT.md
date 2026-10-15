@@ -127,9 +127,9 @@ By default, when invoking `tox`, [unit](#unit-tests), [style](#style-checks) and
 
 Unit tests are run with all the `pyXX` environments.
 
-For example, run the unit tests with Python 3.7 with:
+For example, run the unit tests with Python 3.9 with:
 ```
-tox -e py37
+tox -e py39
 ```
 
 ##### Style checks

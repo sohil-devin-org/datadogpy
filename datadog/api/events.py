@@ -16,8 +16,12 @@ class Event(GetableAPIResource, CreateableAPIResource, SearchableAPIResource):
     _timestamp_keys = frozenset({"start", "end"})
 
     @classmethod
-    def create(cls, attach_host_name=True, method="POST", id=None, params=None, **body):
-        # type: (bool, str, Optional[Any], Optional[Dict[str, Any]], **Any) -> Any
+    def create(cls,
+               attach_host_name: bool = True,
+               method: str = "POST",
+               id: Optional[Any] = None,
+               params: Optional[Dict[str, Any]] = None,
+               **body: Any) -> Any:
         """
         Post an event.
 
@@ -68,11 +72,10 @@ class Event(GetableAPIResource, CreateableAPIResource, SearchableAPIResource):
             if body["alert_type"] not in ["error", "warning", "info", "success"]:
                 raise ApiError("Parameter alert_type must be either error, warning, info or success")
 
-        return super(Event, cls).create(attach_host_name=attach_host_name, method=method, id=id, params=params, **body)
+        return super().create(attach_host_name=attach_host_name, method=method, id=id, params=params, **body)
 
     @classmethod
-    def query(cls, **params):
-        # type: (**Any) -> Any
+    def query(cls, **params: Any) -> Any:
         """
         Get the events that occurred between the *start* and *end* POSIX timestamps,
         optional filtered by *priority* ("low" or "normal"), *sources* and
@@ -87,8 +90,7 @@ class Event(GetableAPIResource, CreateableAPIResource, SearchableAPIResource):
             tags=["application:web"])
         """
 
-        def timestamp_to_integer(k, v):
-            # type: (str, Any) -> Any
+        def timestamp_to_integer(k: str, v: Any) -> Any:
             if k in cls._timestamp_keys:
                 return int(v)
             else:
@@ -96,4 +98,4 @@ class Event(GetableAPIResource, CreateableAPIResource, SearchableAPIResource):
 
         params = {k: timestamp_to_integer(k, v) for k, v in params.items()}
 
-        return super(Event, cls)._search(**params)
+        return super()._search(**params)

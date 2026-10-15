@@ -32,8 +32,7 @@ class SecurityMonitoringRule(
     _api_version = "v2"
 
     @classmethod
-    def get_all(cls, **params):
-        # type: (**Any) -> Any
+    def get_all(cls, **params: Any) -> Any:
         """
         Get all security monitoring rules.
 
@@ -42,11 +41,10 @@ class SecurityMonitoringRule(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(SecurityMonitoringRule, cls).get_all(**params)
+        return super().get_all(**params)
 
     @classmethod
-    def get(cls, rule_id, **params):  # type: ignore[override]
-        # type: (str, **Any) -> Any
+    def get(cls, rule_id: str, **params: Any) -> Any:  # type: ignore[override]
         """
         Get a security monitoring rule's details.
 
@@ -55,11 +53,15 @@ class SecurityMonitoringRule(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(SecurityMonitoringRule, cls).get(rule_id, **params)
+        return super().get(rule_id, **params)
 
     @classmethod
-    def create(cls, attach_host_name=False, method="POST", id=None, params=None, **body):
-        # type: (bool, str, Optional[Any], Optional[Dict[str, Any]], **Any) -> Any
+    def create(cls,
+               attach_host_name: bool = False,
+               method: str = "POST",
+               id: Optional[Any] = None,
+               params: Optional[Dict[str, Any]] = None,
+               **body: Any) -> Any:
         """
         Create a security monitoring rule.
 
@@ -68,13 +70,12 @@ class SecurityMonitoringRule(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(SecurityMonitoringRule, cls).create(
+        return super().create(
             attach_host_name=attach_host_name, method=method, id=id, params=params, **body
         )
 
     @classmethod
-    def update(cls, rule_id, **params):  # type: ignore[override]
-        # type: (str, **Any) -> Any
+    def update(cls, rule_id: str, **params: Any) -> Any:  # type: ignore[override]
         """
         Update a security monitoring rule.
 
@@ -85,11 +86,10 @@ class SecurityMonitoringRule(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(SecurityMonitoringRule, cls).update(rule_id, **params)
+        return super().update(rule_id, **params)
 
     @classmethod
-    def delete(cls, rule_id, **params):  # type: ignore[override]
-        # type: (str, **Any) -> Any
+    def delete(cls, rule_id: str, **params: Any) -> Any:  # type: ignore[override]
         """
         Delete a security monitoring rule.
 
@@ -98,4 +98,4 @@ class SecurityMonitoringRule(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(SecurityMonitoringRule, cls).delete(rule_id, **params)
+        return super().delete(rule_id, **params)

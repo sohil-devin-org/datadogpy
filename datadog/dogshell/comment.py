@@ -11,10 +11,9 @@ from datadog import api
 from datadog.dogshell.common import report_errors, report_warnings
 
 
-class CommentClient(object):
+class CommentClient:
     @classmethod
-    def setup_parser(cls, subparsers):
-        # type: (argparse._SubParsersAction[argparse.ArgumentParser]) -> None
+    def setup_parser(cls, subparsers: "argparse._SubParsersAction[argparse.ArgumentParser]") -> None:
         parser = subparsers.add_parser("comment", help="Post, update, and delete comments.")
 
         verb_parsers = parser.add_subparsers(title="Verbs", dest="verb")
@@ -42,8 +41,7 @@ class CommentClient(object):
         show_parser.set_defaults(func=cls._show)
 
     @classmethod
-    def _post(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _post(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         handle = args.handle
         comment = args.comment
@@ -72,8 +70,7 @@ class CommentClient(object):
             print("message\t\t" + res["comment"]["message"].__repr__())
 
     @classmethod
-    def _update(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _update(cls, args: argparse.Namespace) -> None:
         handle = args.handle
         comment = args.comment
         id = args.comment_id
@@ -102,8 +99,7 @@ class CommentClient(object):
             print("message\t\t" + res["comment"]["message"].__repr__())
 
     @classmethod
-    def _reply(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _reply(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         handle = args.handle
         comment = args.comment
@@ -133,8 +129,7 @@ class CommentClient(object):
             print("message\t\t" + res["comment"]["message"].__repr__())
 
     @classmethod
-    def _show(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _show(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         id = args.comment_id
         format = args.format

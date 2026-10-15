@@ -2,26 +2,19 @@
 # This product includes software developed at Datadog (https://www.datadoghq.com/).
 # Copyright 2015-Present Datadog, Inc
 # stdlib
-from __future__ import print_function
+import configparser
 import os
 import sys
+from collections import UserDict
 from typing import Any, Dict, Optional
 
-# datadog
-from datadog.util.compat import is_p3k, configparser, IterableUserDict, get_input
 
-
-def print_err(msg):
-    # type: (str) -> None
-    if is_p3k():
-        print(msg + "\n", file=sys.stderr)
-    else:
-        sys.stderr.write(msg + "\n")
+def print_err(msg: str) -> None:
+    print(msg + "\n", file=sys.stderr)
     sys.stderr.flush()
 
 
-def report_errors(res):
-    # type: (Dict[str, Any]) -> bool
+def report_errors(res: Dict[str, Any]) -> bool:
     if "errors" in res:
         errors = res["errors"]
         if isinstance(errors, list):
@@ -33,8 +26,7 @@ def report_errors(res):
     return False
 
 
-def report_warnings(res):
-    # type: (Dict[str, Any]) -> bool
+def report_warnings(res: Dict[str, Any]) -> bool:
     if "warnings" in res:
         warnings = res["warnings"]
         if isinstance(warnings, list):
@@ -46,9 +38,8 @@ def report_warnings(res):
     return False
 
 
-class DogshellConfig(IterableUserDict):
-    def load(self, config_file, api_key, app_key, api_host):
-        # type: (str, Optional[str], Optional[str], Optional[str]) -> None
+class DogshellConfig(UserDict):
+    def load(self, config_file: str, api_key: Optional[str], app_key: Optional[str], api_host: Optional[str]) -> None:
         config = configparser.ConfigParser()
 
         if api_host is not None:
@@ -78,11 +69,11 @@ class DogshellConfig(IterableUserDict):
                 try:
                     response = None
                     while response is None or response.strip().lower() not in ["", "y", "n"]:
-                        response = get_input("%s does not exist. Would you like to" " create it? [Y/n] " % config_file)
+                        response = input("%s does not exist. Would you like to" " create it? [Y/n] " % config_file)
                         if response.strip().lower() in ["", "y"]:
                             # Read the api and app keys from stdin
                             while True:
-                                api_key = get_input(
+                                api_key = input(
                                     "What is your api key? (Get it here: "
                                     "https://app.datadoghq.com/account/settings#api) "
                                 )
@@ -90,7 +81,7 @@ class DogshellConfig(IterableUserDict):
                                     break
                                 print("Datadog api keys can only contain alphanumeric characters.")
                             while True:
-                                app_key = get_input(
+                                app_key = input(
                                     "What is your app key? (Get it here: "
                                     "https://app.datadoghq.com/account/settings#api) "
                                 )

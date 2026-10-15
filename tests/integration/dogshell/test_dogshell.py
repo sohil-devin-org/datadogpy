@@ -15,7 +15,7 @@ import sys
 import pytest
 import requests
 
-from datadog.util.compat import is_p3k, ConfigParser
+from configparser import ConfigParser
 from ..api.constants import API_KEY, APP_KEY, MONITOR_REFERENCED_IN_SLO_MESSAGE
 
 WAIT_TIME = 11
@@ -23,12 +23,8 @@ WAIT_TIME = 11
 
 def get_temp_file():
     """Return a (fn, fp) pair"""
-    if is_p3k():
-        fn = "/tmp/{0}-{1}".format(time.time(), random.random())
-        return (fn, open(fn, "w+"))
-    else:
-        tf = tempfile.NamedTemporaryFile()
-        return (tf.name, tf)
+    fn = "/tmp/{0}-{1}".format(time.time(), random.random())
+    return (fn, open(fn, "w+"))
 
 
 @pytest.fixture  # (scope="module")

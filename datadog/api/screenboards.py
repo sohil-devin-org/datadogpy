@@ -28,8 +28,7 @@ class Screenboard(
     _resource_name = "screen"
 
     @classmethod
-    def share(cls, board_id):
-        # type: (Any) -> Any
+    def share(cls, board_id: Any) -> Any:
         """
         Share the screenboard with given id
 
@@ -38,11 +37,10 @@ class Screenboard(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Screenboard, cls)._trigger_action("POST", "screen/share", board_id)
+        return super()._trigger_action("POST", "screen/share", board_id)
 
     @classmethod
-    def revoke(cls, board_id):
-        # type: (Any) -> Any
+    def revoke(cls, board_id: Any) -> Any:
         """
         Revoke a shared screenboard with given id
 
@@ -51,4 +49,4 @@ class Screenboard(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(Screenboard, cls)._trigger_action("DELETE", "screen/share", board_id)
+        return super()._trigger_action("DELETE", "screen/share", board_id)

@@ -29,8 +29,7 @@ class User(
     """
 
     @classmethod
-    def invite(cls, emails):
-        # type: (Union[str, List[str]]) -> Any
+    def invite(cls, emails: Union[str, List[str]]) -> Any:
         """
         Send an invite to join datadog to each of the email addresses in the
         *emails* list. If *emails* is a string, it will be wrapped in a list and
@@ -50,4 +49,4 @@ class User(
             "emails": emails,
         }
 
-        return super(User, cls)._trigger_action("POST", "/invite_users", **body)
+        return super()._trigger_action("POST", "/invite_users", **body)

@@ -13,10 +13,9 @@ from datadog import api
 from datadog.dogshell.common import report_errors, report_warnings
 
 
-class HostsClient(object):
+class HostsClient:
     @classmethod
-    def setup_parser(cls, subparsers):
-        # type: (argparse._SubParsersAction[argparse.ArgumentParser]) -> None
+    def setup_parser(cls, subparsers: "argparse._SubParsersAction[argparse.ArgumentParser]") -> None:
         parser = subparsers.add_parser("hosts", help="Get information about hosts")
         verb_parsers = parser.add_subparsers(title="Verbs", dest="verb")
         verb_parsers.required = True
@@ -67,8 +66,7 @@ class HostsClient(object):
         totals_parser.set_defaults(func=cls._totals)
 
     @classmethod
-    def _list(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _list(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         res = api.Hosts.get_all(
@@ -90,8 +88,7 @@ class HostsClient(object):
             print(json.dumps(res))
 
     @classmethod
-    def _totals(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _totals(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         res = api.Hosts.totals(from_=args.from_)

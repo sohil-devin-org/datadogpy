@@ -10,10 +10,9 @@ from datadog import api
 from datadog.dogshell.common import report_errors, report_warnings
 
 
-class TagClient(object):
+class TagClient:
     @classmethod
-    def setup_parser(cls, subparsers):
-        # type: (argparse._SubParsersAction[argparse.ArgumentParser]) -> None
+    def setup_parser(cls, subparsers: "argparse._SubParsersAction[argparse.ArgumentParser]") -> None:
         parser = subparsers.add_parser("tag", help="View and modify host tags.")
         verb_parsers = parser.add_subparsers(title="Verbs", dest="verb")
         verb_parsers.required = True
@@ -47,8 +46,7 @@ class TagClient(object):
         detach_parser.set_defaults(func=cls._detach)
 
     @classmethod
-    def _add(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _add(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         res = api.Tag.create(args.host, tags=args.tag)
@@ -65,8 +63,7 @@ class TagClient(object):
                 print(c)
 
     @classmethod
-    def _replace(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _replace(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         res = api.Tag.update(args.host, tags=args.tag)
@@ -83,8 +80,7 @@ class TagClient(object):
                 print(c)
 
     @classmethod
-    def _show(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _show(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         if args.host == "all":
@@ -117,8 +113,7 @@ class TagClient(object):
                     print(tag)
 
     @classmethod
-    def _detach(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _detach(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         res = api.Tag.delete(args.host)
         if res is not None:

@@ -7,13 +7,10 @@ import logging
 import re
 import socket
 import subprocess
-import sys
-
-if sys.version_info[:2] >= (3, 5):
-    from typing import Dict, Optional, Any, List  # noqa: F401
+from typing import Dict, Optional, Any, List
 
 # datadog
-from datadog.util.compat import url_lib, iteritems
+# Note: urllib.request is imported where it is used; it is slow to import and `import datadog` must stay cheap.
 from datadog.util.config import get_config, get_os, CfgNotFound
 
 VALID_HOSTNAME_RFC_1123_PATTERN = re.compile(
@@ -24,8 +21,7 @@ MAX_HOSTNAME_LEN = 255
 log = logging.getLogger("datadog.api")
 
 
-def is_valid_hostname(hostname):
-    # type: (str) -> bool
+def is_valid_hostname(hostname: str) -> bool:
     if hostname.lower() in {
         "localhost",
         "localhost.localdomain",
@@ -43,8 +39,7 @@ def is_valid_hostname(hostname):
     return True
 
 
-def get_hostname(hostname_from_config):
-    # type: (bool) -> Optional[str]
+def get_hostname(hostname_from_config: bool) -> Optional[str]:
     """
     Get the canonical host name this agent should identify as. This is
     the authoritative source of the host name for the agent.
@@ -56,8 +51,8 @@ def get_hostname(hostname_from_config):
       * socket.gethostname()
     """
 
-    hostname = None  # type: Optional[str]
-    config = None  # type: Optional[Dict[str, str]]
+    hostname: Optional[str] = None
+    config: Optional[Dict[str, str]] = None
 
     # first, try the config if hostname_from_config is set to True
     try:
@@ -83,8 +78,7 @@ def get_hostname(hostname_from_config):
     # then move on to os-specific detection
     if hostname is None:
 
-        def _get_hostname_unix():
-            # type: () -> Optional[str]
+        def _get_hostname_unix() -> Optional[str]:
             try:
                 # try fqdn
                 p = subprocess.Popen(["/bin/hostname", "-f"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
@@ -102,7 +96,7 @@ def get_hostname(hostname_from_config):
                 hostname = unix_hostname
 
     # if we have an ec2 default hostname, see if there's an instance-id available
-    if hostname is not None and True in [hostname.lower().startswith(p) for p in [u"ip-", u"domu"]]:
+    if hostname is not None and True in [hostname.lower().startswith(p) for p in ["ip-", "domu"]]:
         instanceid = EC2.get_instance_id(config or {})
         if instanceid:
             hostname = instanceid
@@ -110,7 +104,7 @@ def get_hostname(hostname_from_config):
     # fall back on socket.gethostname(), socket.getfqdn() is too unreliable
     if hostname is None:
         try:
-            socket_hostname = socket.gethostname()  # type: Optional[str]
+            socket_hostname: Optional[str] = socket.gethostname()
         except socket.error:
             socket_hostname = None
         if socket_hostname and is_valid_hostname(socket_hostname):
@@ -118,16 +112,17 @@ def get_hostname(hostname_from_config):
 
     if hostname is None:
         log.warning(
-            u"Unable to reliably determine host name. You can define one in your `hosts` file, "
-            u"or in `datadog.conf` file if you have Datadog Agent installed."
+            "Unable to reliably determine host name. You can define one in your `hosts` file, "
+            "or in `datadog.conf` file if you have Datadog Agent installed."
         )
 
     return hostname
 
 
-def get_ec2_instance_id():
-    # type: () -> Optional[str]
+def get_ec2_instance_id() -> Optional[str]:
     try:
+        import urllib.request
+
         # Remember the previous default timeout
         old_timeout = socket.getdefaulttimeout()
 
@@ -135,7 +130,9 @@ def get_ec2_instance_id():
         socket.setdefaulttimeout(0.25)
 
         try:
-            return url_lib.urlopen(url_lib.Request("http://169.254.169.254/latest/" "meta-data/instance-id")).read()
+            return urllib.request.urlopen(
+                urllib.request.Request("http://169.254.169.254/latest/" "meta-data/instance-id")
+            ).read()
         finally:
             # Reset the previous default timeout
             socket.setdefaulttimeout(old_timeout)
@@ -143,15 +140,14 @@ def get_ec2_instance_id():
         return socket.gethostname()
 
 
-class GCE(object):
+class GCE:
     URL = "http://169.254.169.254/computeMetadata/v1/?recursive=true"
     TIMEOUT = 0.1  # second
     SOURCE_TYPE_NAME = "google cloud platform"
-    metadata = None  # type: Optional[Dict[str, Any]]
+    metadata: Optional[Dict[str, Any]] = None
 
     @staticmethod
-    def _get_metadata(agentConfig):
-        # type: (Dict[str, Any]) -> Dict[str, Any]
+    def _get_metadata(agentConfig: Dict[str, Any]) -> Dict[str, Any]:
         if GCE.metadata is not None:
             return GCE.metadata
 
@@ -168,7 +164,9 @@ class GCE(object):
             pass
 
         try:
-            opener = url_lib.build_opener()
+            import urllib.request
+
+            opener = urllib.request.build_opener()
             opener.addheaders = [("X-Google-Metadata-Request", "True")]
             GCE.metadata = json.loads(opener.open(GCE.URL).read().strip())
 
@@ -184,8 +182,7 @@ class GCE(object):
         return GCE.metadata
 
     @staticmethod
-    def get_hostname(agentConfig):
-        # type: (Dict[str, Any]) -> Optional[str]
+    def get_hostname(agentConfig: Dict[str, Any]) -> Optional[str]:
         try:
             host_metadata = GCE._get_metadata(agentConfig)
             return host_metadata["instance"]["hostname"].split(".")[0]
@@ -193,16 +190,15 @@ class GCE(object):
             return None
 
 
-class EC2(object):
+class EC2:
     """Retrieve EC2 metadata"""
 
     URL = "http://169.254.169.254/latest/meta-data"
     TIMEOUT = 0.1  # second
-    metadata = {}  # type: Dict[str, str]
+    metadata: Dict[str, str] = {}
 
     @staticmethod
-    def get_tags(agentConfig):
-        # type: (Dict[str, Any]) -> List[str]
+    def get_tags(agentConfig: Dict[str, Any]) -> List[str]:
         if not agentConfig["collect_instance_metadata"]:
             log.info("Instance metadata collection is disabled. Not collecting it.")
             return []
@@ -215,9 +211,11 @@ class EC2(object):
             pass
 
         try:
-            iam_role = url_lib.urlopen(EC2.URL + "/iam/security-credentials").read().strip()
+            import urllib.request
+
+            iam_role = urllib.request.urlopen(EC2.URL + "/iam/security-credentials").read().strip()
             iam_params = json.loads(
-                url_lib.urlopen(EC2.URL + "/iam/security-credentials" + "/" + str(iam_role)).read().strip()
+                urllib.request.urlopen(EC2.URL + "/iam/security-credentials" + "/" + str(iam_role)).read().strip()
             )
             from boto.ec2.connection import EC2Connection
 
@@ -228,7 +226,7 @@ class EC2(object):
             )
             instance_object = connection.get_only_instances([EC2.metadata["instance-id"]])[0]
 
-            EC2_tags = [u"%s:%s" % (tag_key, tag_value) for tag_key, tag_value in iteritems(instance_object.tags)]
+            EC2_tags = ["%s:%s" % (tag_key, tag_value) for tag_key, tag_value in instance_object.tags.items()]
 
         except Exception:
             log.exception("Problem retrieving custom EC2 tags")
@@ -244,24 +242,22 @@ class EC2(object):
         return EC2_tags
 
     @staticmethod
-    def get_metadata(agentConfig):
-        # type: (Dict[str, Any]) -> Dict[str, str]
+    def get_metadata(agentConfig: Dict[str, Any]) -> Dict[str, str]:
         """Use the ec2 http service to introspect the instance. This adds latency \
         if not running on EC2
         """
-        # >>> import urllib2
-        # >>> urllib2.urlopen('http://169.254.169.254/latest/', timeout=1).read()
+        # >>> import urllib.request
+        # >>> urllib.request.urlopen('http://169.254.169.254/latest/', timeout=1).read()
         # 'meta-data\nuser-data'
-        # >>> urllib2.urlopen('http://169.254.169.254/latest/meta-data', timeout=1).read()
+        # >>> urllib.request.urlopen('http://169.254.169.254/latest/meta-data', timeout=1).read()
         # 'ami-id\nami-launch-index\nami-manifest-path\nhostname\ninstance-id\nlocal-ipv4\
         # npublic-keys/\nreservation-id\nsecurity-groups'
-        # >>> urllib2.urlopen('http://169.254.169.254/latest/meta-data/instance-id',
+        # >>> urllib.request.urlopen('http://169.254.169.254/latest/meta-data/instance-id',
         # timeout=1).read()
         # 'i-deadbeef'
 
         # Every call may add TIMEOUT seconds in latency so don't abuse this call
-        # python 2.4 does not support an explicit timeout argument so force it here
-        # Rather than monkey-patching urllib2, just lower the timeout globally for these calls
+        # Rather than monkey-patching urllib, just lower the timeout globally for these calls
 
         if not agentConfig["collect_instance_metadata"]:
             log.info("Instance metadata collection is disabled. Not collecting it.")
@@ -273,6 +269,8 @@ class EC2(object):
             socket.setdefaulttimeout(EC2.TIMEOUT)
         except Exception:
             pass
+
+        import urllib.request
 
         for k in (
             "instance-id",
@@ -287,7 +285,7 @@ class EC2(object):
             "security-groups",
         ):
             try:
-                v = url_lib.urlopen(EC2.URL + "/" + str(k)).read().strip()
+                v = urllib.request.urlopen(EC2.URL + "/" + str(k)).read().strip()
                 assert isinstance(v, (bytes, str)) and len(v) > 0, "%s is not a string" % v
                 EC2.metadata[k] = v.decode("utf-8") if isinstance(v, bytes) else v
             except Exception:
@@ -303,8 +301,7 @@ class EC2(object):
         return EC2.metadata
 
     @staticmethod
-    def get_instance_id(agentConfig):
-        # type: (Dict[str, Any]) -> Optional[str]
+    def get_instance_id(agentConfig: Dict[str, Any]) -> Optional[str]:
         try:
             return EC2.get_metadata(agentConfig).get("instance-id", None)
         except Exception:

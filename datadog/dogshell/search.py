@@ -11,10 +11,9 @@ from datadog.dogshell.common import report_errors, report_warnings
 
 
 # TODO IS there a test ?
-class SearchClient(object):
+class SearchClient:
     @classmethod
-    def setup_parser(cls, subparsers):
-        # type: (argparse._SubParsersAction[argparse.ArgumentParser]) -> None
+    def setup_parser(cls, subparsers: "argparse._SubParsersAction[argparse.ArgumentParser]") -> None:
         parser = subparsers.add_parser("search", help="search datadog")
         verb_parsers = parser.add_subparsers(title="Verbs", dest="verb")
         verb_parsers.required = True
@@ -24,8 +23,7 @@ class SearchClient(object):
         query_parser.set_defaults(func=cls._query)
 
     @classmethod
-    def _query(cls, args):
-        # type: (argparse.Namespace) -> None
+    def _query(cls, args: argparse.Namespace) -> None:
         api._timeout = args.timeout
         format = args.format
         res = api.Infrastructure.search(q=args.query)

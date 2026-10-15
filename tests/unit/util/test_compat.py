@@ -1,4 +1,3 @@
-# coding: utf8
 # Unless explicitly stated otherwise all files in this repository are licensed under the BSD-3-Clause License.
 # This product includes software developed at Datadog (https://www.datadoghq.com/).
 # Copyright 2015-Present Datadog, Inc
@@ -7,9 +6,9 @@ import pytest
 import sys
 import unittest
 
-from mock import patch
+from unittest.mock import patch
 
-from datadog.util.compat import conditional_lru_cache, is_higher_py32, is_p3k
+from datadog.util.compat import conditional_lru_cache
 
 class TestConditionalLRUCache(unittest.TestCase):
     def test_normal_usage(self):
@@ -46,12 +45,8 @@ class TestConditionalLRUCache(unittest.TestCase):
 
             test_function()
 
-            if is_higher_py32():
-                mock_debug.assert_called_once()
-            else:
-                mock_debug.assert_not_called()
+            mock_debug.assert_called_once()
 
-@pytest.mark.skipif(not is_p3k(), reason='Python 3 only')
 def test_slow_imports(monkeypatch):
     # We should lazy load certain modules to avoid slowing down the startup
     # time when running in a serverless environment.  This test will fail if
@@ -74,7 +69,6 @@ def test_slow_imports(monkeypatch):
                 if fullname == lib:
                     raise ImportError('module %s was imported!' % fullname)
             return None
-        find_module = find_spec  # Python 2
 
     monkeypatch.setattr('sys.meta_path', [BlockListFinder()] + sys.meta_path)
 
@@ -83,3 +77,43 @@ def test_slow_imports(monkeypatch):
             del sys.modules[mod]
 
     import datadog
+
+
+def test_backwards_compatible_aliases():
+    # These names are kept as Python 3 aliases so that existing imports keep working.
+    import builtins
+    import collections
+    import configparser
+    import inspect
+    import io
+    import logging
+    import time
+    import typing
+    import urllib.parse
+    import urllib.request
+
+    from datadog.util import compat
+
+    assert compat.builtins is builtins
+    assert compat.IterableUserDict is collections.UserDict
+    assert compat.StringIO is io.StringIO
+    assert compat.urlparse is urllib.parse.urlparse
+    assert compat.url_lib.urlopen is urllib.request.urlopen
+    assert compat.configparser.ConfigParser is configparser.ConfigParser
+    assert isinstance(compat.ConfigParser(), configparser.ConfigParser)
+    assert compat.imap is map
+    assert compat.get_input is input
+    assert compat.text is str
+    assert list(compat.iteritems({"a": 1})) == [("a", 1)]
+    assert compat.iternext(iter([1, 2])) == 1
+    assert compat.iscoroutinefunction is inspect.iscoroutinefunction
+    assert compat.NullHandler is logging.NullHandler
+    assert compat.monotonic is time.monotonic
+    assert compat.cast(int, "x") == "x"
+    assert compat.cast is typing.cast
+    assert compat.is_p3k() is True
+    assert compat.is_higher_py32() is True
+    assert compat.is_higher_py35() is True
+    assert compat.is_pypy() is ("__pypy__" in sys.builtin_module_names)
+    assert compat.log is logging.getLogger("datadog.util")
+    assert isinstance(compat.LazyLoader("json"), compat.LazyLoader)

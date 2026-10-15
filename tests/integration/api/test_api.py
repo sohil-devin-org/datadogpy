@@ -4,8 +4,8 @@
 # python
 import datetime
 import json
-import mock
 import os
+from unittest import mock
 import re
 import time
 

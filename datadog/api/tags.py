@@ -20,8 +20,7 @@ class Tag(CreateableAPIResource, UpdatableAPIResource, GetableAPIResource, Lista
     _resource_name = "tags/hosts"
 
     @classmethod
-    def create(cls, host, **body):  # type: ignore[override]
-        # type: (str, **Any) -> Any
+    def create(cls, host: str, **body: Any) -> Any:  # type: ignore[override]
         """
         Add tags to a host
 
@@ -36,11 +35,10 @@ class Tag(CreateableAPIResource, UpdatableAPIResource, GetableAPIResource, Lista
         params = {}
         if "source" in body:
             params["source"] = body["source"]
-        return super(Tag, cls).create(id=host, params=params, **body)
+        return super().create(id=host, params=params, **body)
 
     @classmethod
-    def update(cls, host, **body):  # type: ignore[override]
-        # type: (str, **Any) -> Any
+    def update(cls, host: str, **body: Any) -> Any:  # type: ignore[override]
         """
         Update all tags for a given host
 
@@ -55,4 +53,4 @@ class Tag(CreateableAPIResource, UpdatableAPIResource, GetableAPIResource, Lista
         params = {}
         if "source" in body:
             params["source"] = body["source"]
-        return super(Tag, cls).update(id=host, params=params, **body)
+        return super().update(id=host, params=params, **body)

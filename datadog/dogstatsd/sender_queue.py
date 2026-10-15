@@ -1,14 +1,10 @@
 import collections
 import logging
-import sys
 import threading
-
-from datadog.util.compat import monotonic
+from time import monotonic
+from typing import Callable, Dict, Optional, Union  # noqa: F401
 
 log = logging.getLogger("datadog.dogstatsd")
-
-if sys.version_info[:2] >= (3, 5):
-    from typing import Callable, Dict, Optional, Union  # noqa: F401
 
 
 # Sentinel telling the background sender thread to shut down.
@@ -17,12 +13,11 @@ Stop = object()
 # What the queue can hold. A payload is either a bare string (replay-safe, no
 # expiry state needed) or a PendingPayload (subject to expiry); Stop is the
 # only other thing that ever goes in, and is matched by identity.
-if sys.version_info[:2] >= (3, 5):
-    QueuedItem = Union[str, "PendingPayload"]  # noqa: F401
-    QueuedItemOrStop = Union[str, "PendingPayload", object]  # noqa: F401
+QueuedItem = Union[str, "PendingPayload"]  # noqa: F401
+QueuedItemOrStop = Union[str, "PendingPayload", object]  # noqa: F401
 
 
-class PendingPayload(object):
+class PendingPayload:
     """A packet queued for the background sender that can go stale.
 
     Only payloads subject to expiry are wrapped in this. A replay-safe
@@ -44,14 +39,12 @@ class PendingPayload(object):
 
     __slots__ = ("payload", "enqueued_at")
 
-    def __init__(self, payload, enqueued_at):
-        # type: (str, float) -> None
+    def __init__(self, payload: str, enqueued_at: float) -> None:
         self.payload = payload
         self.enqueued_at = enqueued_at
 
 
-def is_replay_safe(item):
-    # type: (Union[str, PendingPayload]) -> bool
+def is_replay_safe(item: Union[str, PendingPayload]) -> bool:
     """True when this queue entry is exempt from expiry.
 
     Replay-safe entries are queued as bare strings; everything subject to
@@ -61,15 +54,14 @@ def is_replay_safe(item):
     return not isinstance(item, PendingPayload)
 
 
-def payload_text(item):
-    # type: (Union[str, PendingPayload]) -> str
+def payload_text(item: Union[str, PendingPayload]) -> str:
     """The serialized packet text of a queue entry, whichever form it took."""
     if isinstance(item, PendingPayload):
         return item.payload
     return item
 
 
-class SenderQueue(object):
+class SenderQueue:
     """Bounded hand-off queue between application threads and the background sender thread.
 
     put() never rejects a payload outright. When the queue is already at its
@@ -97,14 +89,19 @@ class SenderQueue(object):
     never blocks on put_timeout.
     """
 
-    def __init__(self, maxsize, expiry_seconds, on_drop_queue_full, on_drop_expired, put_timeout=0):
-        # type: (int, float, Callable[[QueuedItem], None], Callable[[QueuedItem], None], Optional[float]) -> None  # noqa: E501
+    def __init__(self,
+                 maxsize: int,
+                 expiry_seconds: float,
+                 on_drop_queue_full: Callable[[QueuedItem], None],
+                 on_drop_expired: Callable[[QueuedItem], None],
+                 put_timeout: Optional[float] = 0) -> None:
+        # noqa: E501
         self._maxsize = maxsize
         self._expiry_seconds = expiry_seconds
         self._on_drop_queue_full = on_drop_queue_full
         self._on_drop_expired = on_drop_expired
         self._put_timeout = put_timeout
-        self._deque = collections.deque()  # type: collections.deque
+        self._deque: collections.deque = collections.deque()
         self._lock = threading.Lock()
         self._not_empty = threading.Condition(self._lock)
         self._not_full = threading.Condition(self._lock)
@@ -132,18 +129,16 @@ class SenderQueue(object):
         # of an already-finished item) fails loudly instead of drifting the
         # counter. The item itself is held in the value to keep it alive
         # (and its id stable) for as long as the entry exists.
-        self._in_flight = {}  # type: Dict[int, QueuedItemOrStop]
+        self._in_flight: Dict[int, QueuedItemOrStop] = {}
 
-    def _expired(self, item, now):
-        # type: (QueuedItem, float) -> bool
+    def _expired(self, item: QueuedItem, now: float) -> bool:
         if not isinstance(item, PendingPayload):
             # A bare string is a replay-safe payload: it carries its own
             # timestamp, so it never goes stale (see PendingPayload).
             return False
         return (now - item.enqueued_at) > self._expiry_seconds
 
-    def _make_room_locked(self):
-        # type: () -> None
+    def _make_room_locked(self) -> None:
         """Drop the oldest entry, plus any further expired entries at the front.
 
         Called with self._lock already held, and only when the queue is at
@@ -175,8 +170,7 @@ class SenderQueue(object):
         if reclaimed:
             self._not_full.notify(reclaimed)
 
-    def put(self, item):
-        # type: (QueuedItemOrStop) -> None
+    def put(self, item: QueuedItemOrStop) -> None:
         """Queue a payload (or the Stop sentinel).
 
         If the queue is full: waits for room according to put_timeout --
@@ -215,8 +209,7 @@ class SenderQueue(object):
             self._unfinished_tasks += 1
             self._not_empty.notify()
 
-    def close(self):
-        # type: () -> None
+    def close(self) -> None:
         """Wake any put() currently waiting for room, immediately.
 
         A put() blocked waiting for space in a full queue holds no lock this
@@ -245,8 +238,7 @@ class SenderQueue(object):
             self._closing = True
             self._not_full.notify_all()
 
-    def requeue_front(self, item):
-        # type: (QueuedItem) -> None
+    def requeue_front(self, item: QueuedItem) -> None:
         """Put an in-flight payload back at the front after a failed send attempt.
 
         The payload was already accounted for by the put() that originally
@@ -285,8 +277,7 @@ class SenderQueue(object):
             self._deque.appendleft(item)
             self._not_empty.notify()
 
-    def get(self):
-        # type: () -> QueuedItemOrStop
+    def get(self) -> QueuedItemOrStop:
         """Block for the next payload, silently dropping expired entries along the way."""
         while True:
             with self._not_empty:
@@ -316,8 +307,7 @@ class SenderQueue(object):
 
             return item
 
-    def _take_in_flight_locked(self, item):
-        # type: (QueuedItemOrStop) -> None
+    def _take_in_flight_locked(self, item: QueuedItemOrStop) -> None:
         # Caller already holds self._lock (shared by _not_empty / _all_tasks_done).
         # Records `item` as the one currently handed out by get(). A duplicate
         # here means a previous get() was never finished (or the same object
@@ -333,8 +323,7 @@ class SenderQueue(object):
             )
         self._in_flight[key] = item
 
-    def _release_in_flight_locked(self, item, action):
-        # type: (QueuedItemOrStop, str) -> bool
+    def _release_in_flight_locked(self, item: QueuedItemOrStop, action: str) -> bool:
         # Caller already holds self._lock (shared by _not_empty / _all_tasks_done).
         # Verifies `item` is currently in flight, then drops it from the
         # in-flight map. `action` names the caller ("requeue_front"/
@@ -354,8 +343,7 @@ class SenderQueue(object):
         del self._in_flight[key]
         return True
 
-    def _finish_task_locked(self):
-        # type: () -> None
+    def _finish_task_locked(self) -> None:
         # Caller already holds self._lock (shared by _not_empty / _all_tasks_done).
         unfinished = self._unfinished_tasks - 1
         if unfinished < 0:
@@ -372,8 +360,7 @@ class SenderQueue(object):
         if unfinished == 0:
             self._all_tasks_done.notify_all()
 
-    def task_done(self, item):
-        # type: (QueuedItemOrStop) -> None
+    def task_done(self, item: QueuedItemOrStop) -> None:
         with self._all_tasks_done:
             # The item being finished must be the one get() currently has out
             # of the queue. This is the counterpart to get()'s
@@ -385,8 +372,7 @@ class SenderQueue(object):
                 return
             self._finish_task_locked()
 
-    def join(self, timeout=None):
-        # type: (Optional[float]) -> bool
+    def join(self, timeout: Optional[float] = None) -> bool:
         """Wait until every queued payload has been sent, dropped or expired.
 
         :param timeout: Maximum number of seconds to wait. None (the default)
@@ -411,12 +397,10 @@ class SenderQueue(object):
                 self._all_tasks_done.wait(remaining)
             return True
 
-    def qsize(self):
-        # type: () -> int
+    def qsize(self) -> int:
         with self._lock:
             return len(self._deque)
 
-    def empty(self):
-        # type: () -> bool
+    def empty(self) -> bool:
         with self._lock:
             return not self._deque

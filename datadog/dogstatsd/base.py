@@ -14,26 +14,18 @@ import os
 import socket
 import errno
 import struct
-import sys
 import threading
 import time
+from socket import socket as _Socket
 from threading import RLock
+from time import monotonic
+from urllib.parse import urlparse
 import weakref
 
-if sys.version_info[:2] >= (3, 5):
-    from typing import TYPE_CHECKING  # noqa: F401
-
-
 # pylint: disable=unused-import
-if sys.version_info[:2] >= (3, 5):
-    from typing import (  # noqa: F401
-        Any, Callable, Iterable, List, Optional, Text, Tuple, Type, Union, overload,
-    )
-
-try:
-    from typing import SupportsIndex
-except ImportError:
-    SupportsIndex = int  # type: ignore[assignment,misc]
+from typing import (  # noqa: F401
+    Any, Callable, Iterable, List, Optional, SupportsIndex, Text, Tuple, Type, Union, overload,
+)
 # pylint: enable=unused-import
 
 # Datadog libraries
@@ -51,108 +43,79 @@ from datadog.dogstatsd.sender_queue import (
     Stop,
     payload_text,
 )
-
-if sys.version_info[:2] >= (3, 5):
-    from datadog.dogstatsd.sender_queue import QueuedItem  # noqa: F401
-from datadog.util.compat import monotonic, text, urlparse
+from datadog.dogstatsd.sender_queue import QueuedItem  # noqa: F401
 from datadog.util.format import normalize_tags, validate_cardinality
 from datadog.version import __version__
 
 
-if sys.version_info[:2] >= (3, 5):
-    if TYPE_CHECKING:
-        from socket import socket as _Socket
-
-    BaseListClass = List[str]
-else:
-    BaseListClass = list
-
-
-class TagList(BaseListClass):
+class TagList(List[str]):
     """A list subclass that calls on_change() after any mutation."""
 
-    def __init__(self, iterable=(), on_change=None):
-        # type: (Iterable[str], Optional[Callable[[], None]]) -> None
-        super(TagList, self).__init__(iterable)
+    def __init__(self, iterable: Iterable[str] = (), on_change: Optional[Callable[[], None]] = None) -> None:
+        super().__init__(iterable)
         self._on_change = on_change
 
-    def _notify(self):
-        # type: () -> None
+    def _notify(self) -> None:
         if self._on_change is not None:
             self._on_change()
 
-    if sys.version_info[:2] >= (3, 5):
-        @overload
-        def __setitem__(self, index, value):  # noqa: F811
-            # type: (SupportsIndex, str) -> None
-            pass
+    @overload
+    def __setitem__(self, index: SupportsIndex, value: str) -> None:  # noqa: F811
+        pass
 
-        @overload
-        def __setitem__(self, index, value):  # noqa: F811
-            # type: (slice, Iterable[str]) -> None
-            pass
+    @overload
+    def __setitem__(self, index: slice, value: Iterable[str]) -> None:  # noqa: F811
+        pass
 
-    def __setitem__(self, index, value):  # noqa: F811
-        # type: (Union[SupportsIndex, slice], Union[str, Iterable[str]]) -> None
-        super(TagList, self).__setitem__(index, value)  # type: ignore
+    def __setitem__(self, index: Union[SupportsIndex, slice], value: Union[str, Iterable[str]]) -> None:  # noqa: F811
+        super().__setitem__(index, value)  # type: ignore
         self._notify()
 
-    def __delitem__(self, index):  # noqa: F811
-        # type: (Union[SupportsIndex, slice]) -> None
-        super(TagList, self).__delitem__(index)
+    def __delitem__(self, index: Union[SupportsIndex, slice]) -> None:  # noqa: F811
+        super().__delitem__(index)
         self._notify()
 
-    def __iadd__(self, other):  # type: ignore[misc,override]  # noqa: F811
-        # type: (Iterable[str]) -> "TagList"
-        super(TagList, self).__iadd__(other)
+    def __iadd__(self, other: Iterable[str]) -> "TagList":  # type: ignore[misc,override]  # noqa: F811
+        super().__iadd__(other)
         self._notify()
         return self
 
-    def __imul__(self, n):  # noqa: F811
-        # type: (SupportsIndex) -> "TagList"
-        super(TagList, self).__imul__(n)
+    def __imul__(self, n: SupportsIndex) -> "TagList":  # noqa: F811
+        super().__imul__(n)
         self._notify()
         return self
 
-    def append(self, value):  # noqa: F811
-        # type: (str) -> None
-        super(TagList, self).append(value)
+    def append(self, value: str) -> None:  # noqa: F811
+        super().append(value)
         self._notify()
 
-    def extend(self, iterable):  # noqa: F811
-        # type: (Iterable[str]) -> None
-        super(TagList, self).extend(iterable)
+    def extend(self, iterable: Iterable[str]) -> None:  # noqa: F811
+        super().extend(iterable)
         self._notify()
 
-    def insert(self, index, value):  # noqa: F811
-        # type: (SupportsIndex, str) -> None
-        super(TagList, self).insert(index, value)
+    def insert(self, index: SupportsIndex, value: str) -> None:  # noqa: F811
+        super().insert(index, value)
         self._notify()
 
-    def remove(self, value):  # noqa: F811
-        # type: (str) -> None
-        super(TagList, self).remove(value)
+    def remove(self, value: str) -> None:  # noqa: F811
+        super().remove(value)
         self._notify()
 
-    def pop(self, index=-1):  # noqa: F811
-        # type: (SupportsIndex) -> str
-        value = super(TagList, self).pop(index)
+    def pop(self, index: SupportsIndex = -1) -> str:  # noqa: F811
+        value = super().pop(index)
         self._notify()
         return value
 
-    def clear(self):  # noqa: F811
-        # type: () -> None
-        super(TagList, self).__delitem__(slice(None))
+    def clear(self) -> None:  # noqa: F811
+        super().__delitem__(slice(None))
         self._notify()
 
-    def sort(self, *args, **kwargs):
-        # type: (*Any, **Any) -> None
-        super(TagList, self).sort(*args, **kwargs)
+    def sort(self, *args: Any, **kwargs: Any) -> None:
+        super().sort(*args, **kwargs)
         self._notify()
 
-    def reverse(self):
-        # type: () -> None
-        super(TagList, self).reverse()
+    def reverse(self) -> None:
+        super().reverse()
         self._notify()
 
 
@@ -245,11 +208,10 @@ TELEMETRY_FORMATTING_STR = "\n".join(
 SUPPORTS_FORKING = hasattr(os, "register_at_fork") and not os.environ.get("DD_DOGSTATSD_DISABLE_FORK_SUPPORT", None)
 TRACK_INSTANCES = not os.environ.get("DD_DOGSTATSD_DISABLE_INSTANCE_TRACKING", None)
 
-_instances = weakref.WeakSet()  # type: weakref.WeakSet
+_instances: weakref.WeakSet = weakref.WeakSet()
 
 
-def pre_fork():
-    # type: () -> None
+def pre_fork() -> None:
     """Prepare all client instances for a process fork.
 
     If SUPPORTS_FORKING is true, this will be called automatically before os.fork().
@@ -258,8 +220,7 @@ def pre_fork():
         c.pre_fork()
 
 
-def post_fork_parent():
-    # type: () -> None
+def post_fork_parent() -> None:
     """Restore all client instances after a fork.
 
     If SUPPORTS_FORKING is true, this will be called automatically after os.fork().
@@ -268,8 +229,7 @@ def post_fork_parent():
         c.post_fork_parent()
 
 
-def post_fork_child():
-    # type: () -> None
+def post_fork_child() -> None:
     for c in _instances:
         c.post_fork_child()
 
@@ -284,7 +244,7 @@ if SUPPORTS_FORKING:
 
 # pylint: disable=useless-object-inheritance,too-many-instance-attributes
 # pylint: disable=too-many-arguments,too-many-locals
-class DogStatsd(object):
+class DogStatsd:
     OK, WARNING, CRITICAL, UNKNOWN = (0, 1, 2, 3)
 
     # Cardinality
@@ -295,37 +255,37 @@ class DogStatsd(object):
 
     def __init__(
         self,
-        host=None,                              # type: Optional[Text]
-        port=None,                              # type: Optional[int]
-        max_buffer_size=None,                   # type: Optional[int]
-        flush_interval=DEFAULT_BUFFERING_FLUSH_INTERVAL,  # type: float
-        disable_aggregation=True,               # type: bool
-        disable_buffering=True,                 # type: bool
-        namespace=None,                         # type: Optional[Text]
-        constant_tags=None,                     # type: Optional[List[str]]
-        use_ms=False,                           # type: bool
-        use_default_route=False,                # type: bool
-        socket_path=None,                       # type: Optional[Text]
-        default_sample_rate=1,                  # type: float
-        disable_telemetry=False,                # type: bool
-        telemetry_min_flush_interval=(DEFAULT_TELEMETRY_MIN_FLUSH_INTERVAL),  # type: int
-        telemetry_host=None,                    # type: Optional[Text]
-        telemetry_port=None,                    # type: Optional[Union[str, int]]
-        telemetry_socket_path=None,             # type: Optional[Text]
-        max_buffer_len=0,                       # type: int
-        max_metric_samples_per_context=0,       # type: int
-        container_id=None,                      # type: Optional[Text]
-        origin_detection_enabled=True,          # type: bool
-        cardinality=None,                       # type: Optional[Text]
-        socket_timeout=0,                       # type: Optional[float]
-        telemetry_socket_timeout=0,             # type: Optional[float]
-        disable_background_sender=True,         # type: bool
-        sender_queue_size=0,                    # type: int
-        sender_queue_timeout=0,                 # type: Optional[float]
-        sender_queue_expiry_seconds=PENDING_PAYLOAD_EXPIRY_SECONDS,  # type: float
-        track_instance=True,                    # type: bool
-        socket_connect_retry=False,              # type: bool
-    ):  # type: (...) -> None
+        host: Optional[Text] = None,
+        port: Optional[int] = None,
+        max_buffer_size: Optional[int] = None,
+        flush_interval: float = DEFAULT_BUFFERING_FLUSH_INTERVAL,
+        disable_aggregation: bool = True,
+        disable_buffering: bool = True,
+        namespace: Optional[Text] = None,
+        constant_tags: Optional[List[str]] = None,
+        use_ms: bool = False,
+        use_default_route: bool = False,
+        socket_path: Optional[Text] = None,
+        default_sample_rate: float = 1,
+        disable_telemetry: bool = False,
+        telemetry_min_flush_interval: int = (DEFAULT_TELEMETRY_MIN_FLUSH_INTERVAL),
+        telemetry_host: Optional[Text] = None,
+        telemetry_port: Optional[Union[str, int]] = None,
+        telemetry_socket_path: Optional[Text] = None,
+        max_buffer_len: int = 0,
+        max_metric_samples_per_context: int = 0,
+        container_id: Optional[Text] = None,
+        origin_detection_enabled: bool = True,
+        cardinality: Optional[Text] = None,
+        socket_timeout: Optional[float] = 0,
+        telemetry_socket_timeout: Optional[float] = 0,
+        disable_background_sender: bool = True,
+        sender_queue_size: int = 0,
+        sender_queue_timeout: Optional[float] = 0,
+        sender_queue_expiry_seconds: float = PENDING_PAYLOAD_EXPIRY_SECONDS,
+        track_instance: bool = True,
+        socket_connect_retry: bool = False,
+    ) -> None:
         """
         Initialize a DogStatsd object.
 
@@ -575,7 +535,7 @@ class DogStatsd(object):
         self.socket_timeout = socket_timeout
         self.socket_connect_retry = socket_connect_retry
         if socket_path is not None:
-            self.socket_path = socket_path  # type: Optional[text]
+            self.socket_path: Optional[str] = socket_path
             self.host = None
             self.port = None
         else:
@@ -583,9 +543,9 @@ class DogStatsd(object):
             self.host = self.resolve_host(host, use_default_route)
             self.port = int(port)
 
-        self.telemetry_socket_path = telemetry_socket_path  # type: Optional[Text]
-        self.telemetry_host = None  # type: Optional[Text]
-        self.telemetry_port = None  # type: Optional[int]
+        self.telemetry_socket_path: Optional[Text] = telemetry_socket_path
+        self.telemetry_host: Optional[Text] = None
+        self.telemetry_port: Optional[int] = None
         self.telemetry_socket_timeout = telemetry_socket_timeout
         if not telemetry_socket_path and telemetry_host:
             self.telemetry_socket_path = None
@@ -617,14 +577,14 @@ class DogStatsd(object):
         self.constant_tags = TagList(constant_tags + env_tags)
 
         if namespace is not None:
-            namespace = text(namespace)
+            namespace = str(namespace)
         self.namespace = namespace
-        self.use_ms = use_ms  # type: bool
+        self.use_ms: bool = use_ms
         self.default_sample_rate = default_sample_rate
         self.cardinality = cardinality
 
         # Origin detection
-        self._container_id = None  # type: Optional[Text]
+        self._container_id: Optional[Text] = None
         origin_detection_enabled = self._is_origin_detection_enabled(
             container_id, origin_detection_enabled
         )
@@ -649,7 +609,7 @@ class DogStatsd(object):
         self._disable_aggregation = disable_aggregation
 
         self._flush_interval = flush_interval
-        self._flush_thread = None  # type: Optional[threading.Thread]
+        self._flush_thread: Optional[threading.Thread] = None
         self._flush_thread_stop = threading.Event()
         self.aggregator = Aggregator(max_metric_samples_per_context, self.cardinality)
         # Indicates if the process is about to fork, so we shouldn't start any new threads yet.
@@ -665,8 +625,8 @@ class DogStatsd(object):
         else:
             log.debug("Statsd buffering and aggregation is disabled")
 
-        self._queue = None  # type: Optional[SenderQueue]
-        self._sender_thread = None  # type: Optional[threading.Thread]
+        self._queue: Optional[SenderQueue] = None
+        self._sender_thread: Optional[threading.Thread] = None
         # Set to ask a running sender thread to stop. Also what makes its
         # retry backoff interruptible -- see _sender_main_loop.
         self._sender_stopping = threading.Event()
@@ -674,7 +634,7 @@ class DogStatsd(object):
         # on a payload stuck in the retry loop, set by _stop_sender_thread()
         # and read by _sender_main_loop. None means no shutdown has been
         # requested (or a fresh sender hasn't seen one yet).
-        self._sender_stop_deadline = None  # type: Optional[float]
+        self._sender_stop_deadline: Optional[float] = None
         # Set by _sender_main_loop when it gives up on a payload because the
         # deadline above passed while still retrying a connection failure --
         # i.e. the queue did NOT fully drain even though the thread exited.
@@ -691,26 +651,22 @@ class DogStatsd(object):
             _instances.add(self)
 
     @property
-    def socket_path(self):
-        # type: () -> Optional[Text]
+    def socket_path(self) -> Optional[Text]:
         return self._socket_path
 
     @socket_path.setter
-    def socket_path(self, path):
-        # type: (Optional[Text]) -> None
+    def socket_path(self, path: Optional[Text]) -> None:
         with self._socket_lock:
             self._socket_path = path
 
     @property
-    def socket(self):
-        # type: () -> Optional[_Socket]
+    def socket(self) -> Optional[_Socket]:
         return self._socket
 
     @socket.setter
-    def socket(self, new_socket):
-        # type: (Optional[_Socket]) -> None
+    def socket(self, new_socket: Optional[_Socket]) -> None:
         self._socket = new_socket
-        self._socket_kind = None  # type: Optional[int]
+        self._socket_kind: Optional[int] = None
         if new_socket:
             try:
                 self._socket_kind = new_socket.getsockopt(socket.SOL_SOCKET, socket.SO_TYPE)
@@ -732,15 +688,13 @@ class DogStatsd(object):
         self._max_payload_size = UDP_OPTIMAL_PAYLOAD_LENGTH
 
     @property
-    def telemetry_socket(self):
-        # type: () -> Optional[_Socket]
+    def telemetry_socket(self) -> Optional[_Socket]:
         return self._telemetry_socket
 
     @telemetry_socket.setter
-    def telemetry_socket(self, t_socket):
-        # type: (Optional[_Socket]) -> None
+    def telemetry_socket(self, t_socket: Optional[_Socket]) -> None:
         self._telemetry_socket = t_socket
-        self._telemetry_socket_kind = None  # type: Optional[int]
+        self._telemetry_socket_kind: Optional[int] = None
         if t_socket:
             try:
                 self._telemetry_socket_kind = t_socket.getsockopt(socket.SOL_SOCKET, socket.SO_TYPE)
@@ -751,11 +705,10 @@ class DogStatsd(object):
 
     def enable_background_sender(
         self,
-        sender_queue_size=0,
-        sender_queue_timeout=0,
-        sender_queue_expiry_seconds=PENDING_PAYLOAD_EXPIRY_SECONDS,
-    ):
-        # type: (int, Optional[float], float) -> None
+        sender_queue_size: int = 0,
+        sender_queue_timeout: Optional[float] = 0,
+        sender_queue_expiry_seconds: float = PENDING_PAYLOAD_EXPIRY_SECONDS,
+    ) -> None:
         """
         Use a background thread to communicate with the dogstatsd server.
         When enabled, a background thread will be used to send metric payloads to the Agent.
@@ -790,8 +743,7 @@ class DogStatsd(object):
 
             self._start_sender_thread()
 
-    def disable_background_sender(self, timeout=None):
-        # type: (Optional[float]) -> bool
+    def disable_background_sender(self, timeout: Optional[float] = None) -> bool:
         """Disable background sender mode.
 
         This call will block until all previously queued payloads are sent.
@@ -816,17 +768,17 @@ class DogStatsd(object):
             self._sender_enabled = False
             return self._stop_sender_thread(timeout)
 
-    def disable_telemetry(self):
-        # type: () -> None
+    def disable_telemetry(self) -> None:
         self._telemetry = False
 
-    def enable_telemetry(self):
-        # type: () -> None
+    def enable_telemetry(self) -> None:
         self._telemetry = True
 
     @staticmethod
-    def _parse_env_connection_overrides(host, port, socket_path):
-        # type: (Optional[Text], Optional[int], Optional[Text]) -> Tuple[Optional[Text], Optional[int], Optional[Text]]
+    def _parse_env_connection_overrides(host: Optional[Text],
+                                        port: Optional[int],
+                                        socket_path: Optional[Text]
+                                        ) -> Tuple[Optional[Text], Optional[int], Optional[Text]]:
         """
         Resolve the connection host/port/socket_path from environment variables,
         without overriding values already provided explicitly to the constructor.
@@ -847,7 +799,6 @@ class DogStatsd(object):
             elif parsed.scheme == "udp":
                 try:
                     url_port = parsed.port
-                    # Python 2's urlparse does not bounds-check the port.
                     if url_port is None or url_port < 0 or url_port > 65535:
                         log.warning(
                             "DD_DOGSTATSD_URL %r had no or invalid port number, reverting to default %s",
@@ -886,8 +837,7 @@ class DogStatsd(object):
         return host, port, socket_path
 
     # Note: Invocations of this method should be thread-safe
-    def _start_flush_thread(self):
-        # type: () -> None
+    def _start_flush_thread(self) -> None:
         if self._disable_aggregation and self.disable_buffering:
             log.debug("Statsd periodic buffer and aggregation flush is disabled")
             return
@@ -904,8 +854,7 @@ class DogStatsd(object):
         if self._flush_thread is not None:
             return
 
-        def _flush_thread_loop(self, flush_interval):
-            # type: (DogStatsd, float) -> None
+        def _flush_thread_loop(self: DogStatsd, flush_interval: float) -> None:
             while not self._flush_thread_stop.is_set():
                 time.sleep(flush_interval)
                 if not self._disable_aggregation:
@@ -925,8 +874,7 @@ class DogStatsd(object):
         )
 
     # Note: Invocations of this method should be thread-safe
-    def _stop_flush_thread(self):
-        # type: () -> None
+    def _stop_flush_thread(self) -> None:
         if not self._flush_thread:
             return
         try:
@@ -942,12 +890,10 @@ class DogStatsd(object):
         self._flush_thread = None
         self._flush_thread_stop.clear()
 
-    def _dedicated_telemetry_destination(self):
-        # type: () -> bool
+    def _dedicated_telemetry_destination(self) -> bool:
         return bool(self.telemetry_socket_path or self.telemetry_host)
 
-    def _uses_dedicated_telemetry(self, is_telemetry):
-        # type: (bool) -> bool
+    def _uses_dedicated_telemetry(self, is_telemetry: bool) -> bool:
         """True when this packet goes to a separate telemetry destination.
 
         Decides which socket/socket_path pair applies to a packet, so the
@@ -956,25 +902,24 @@ class DogStatsd(object):
         return is_telemetry and self._dedicated_telemetry_destination()
 
     # Context manager helper
-    def __enter__(self):
-        # type: () -> DogStatsd
+    def __enter__(self) -> "DogStatsd":
         self.open_buffer()
         return self
 
     # Context manager helper
-    def __exit__(self, exc_type, value, traceback):
-        # type: (Optional[Type[BaseException]], Optional[BaseException], Optional[Any]) -> None
+    def __exit__(self,
+                 exc_type: Optional[Type[BaseException]],
+                 value: Optional[BaseException],
+                 traceback: Optional[Any]) -> None:
         self.close_buffer()
 
     @property
-    def disable_buffering(self):
-        # type: () -> bool
+    def disable_buffering(self) -> bool:
         with self._config_lock:
             return self._disable_buffering
 
     @disable_buffering.setter
-    def disable_buffering(self, is_disabled):
-        # type: (bool) -> None
+    def disable_buffering(self, is_disabled: bool) -> None:
         with self._config_lock:
             # If the toggle didn't change anything, this method is a noop
             if self._disable_buffering == is_disabled:
@@ -993,8 +938,7 @@ class DogStatsd(object):
                 self._send = self._send_to_buffer
                 self._start_flush_thread()
 
-    def disable_aggregation(self):
-        # type: () -> None
+    def disable_aggregation(self) -> None:
         with self._config_lock:
             # If the toggle didn't change anything, this method is a noop
             if self._disable_aggregation:
@@ -1008,8 +952,9 @@ class DogStatsd(object):
                 self._stop_flush_thread()
             log.debug("Statsd aggregation is disabled")
 
-    def enable_aggregation(self, flush_interval=DEFAULT_BUFFERING_FLUSH_INTERVAL, max_samples_per_context=0):
-        # type: (float, int) -> None
+    def enable_aggregation(self,
+                           flush_interval: float = DEFAULT_BUFFERING_FLUSH_INTERVAL,
+                           max_samples_per_context: int = 0) -> None:
         with self._config_lock:
             if not self._disable_aggregation:
                 return
@@ -1021,8 +966,7 @@ class DogStatsd(object):
             self._start_flush_thread()
 
     @staticmethod
-    def resolve_host(host, use_default_route):
-        # type: (Optional[Text], bool) -> Optional[Text]
+    def resolve_host(host: Optional[Text], use_default_route: bool) -> Optional[Text]:
         """
         Resolve the DogStatsd host.
 
@@ -1036,8 +980,7 @@ class DogStatsd(object):
 
         return get_default_route()
 
-    def get_socket(self, telemetry=False):
-        # type: (bool) -> _Socket
+    def get_socket(self, telemetry: bool = False) -> _Socket:
         """
         Return a connected socket.
 
@@ -1076,8 +1019,7 @@ class DogStatsd(object):
 
             return self.socket
 
-    def set_socket_timeout(self, timeout):
-        # type: (Optional[float]) -> None
+    def set_socket_timeout(self, timeout: Optional[float]) -> None:
         """
         Set timeout for socket operations, in seconds.
 
@@ -1090,8 +1032,7 @@ class DogStatsd(object):
                 self.socket.settimeout(timeout)
 
     @classmethod
-    def _ensure_min_send_buffer_size(cls, sock, min_size=MIN_SEND_BUFFER_SIZE):
-        # type: (_Socket, int) -> None
+    def _ensure_min_send_buffer_size(cls, sock: _Socket, min_size: int = MIN_SEND_BUFFER_SIZE) -> None:
         # Increase the send buffer size where needed (e.g. MacOS has 4k TX
         # buffers which is half of the max packet size that the client will send.
         if os.name == 'posix':
@@ -1101,8 +1042,7 @@ class DogStatsd(object):
                 log.debug("Socket send buffer increased to %dkb", min_size / 1024)
 
     @classmethod
-    def _get_uds_socket(cls, socket_path, timeout):
-        # type: (Text, Optional[float]) -> _Socket
+    def _get_uds_socket(cls, socket_path: Text, timeout: Optional[float]) -> _Socket:
         """Make one connect attempt per candidate socket kind.
         """
         valid_socket_kinds = [socket.SOCK_DGRAM, socket.SOCK_STREAM]
@@ -1141,8 +1081,7 @@ class DogStatsd(object):
         raise socket.error("no usable socket kind for {}".format(socket_path))
 
     @classmethod
-    def _get_udp_socket(cls, host, port, timeout):
-        # type: (Optional[Text], Optional[int], Optional[float]) -> _Socket
+    def _get_udp_socket(cls, host: Optional[Text], port: Optional[int], timeout: Optional[float]) -> _Socket:
         log.debug("Connecting to %s:%s", host, port)
         addrinfo = socket.getaddrinfo(host, port, 0, socket.SOCK_DGRAM)
         # Override gai.conf order for backwrads compatibility: prefer
@@ -1169,8 +1108,7 @@ class DogStatsd(object):
 
         raise ValueError("getaddrinfo returned no addresses to connect to")
 
-    def open_buffer(self, max_buffer_size=None):
-        # type: (Optional[int]) -> None
+    def open_buffer(self, max_buffer_size: Optional[int] = None) -> None:
         """
         Open a buffer to send a batch of metrics.
 
@@ -1190,8 +1128,7 @@ class DogStatsd(object):
         if max_buffer_size is not None:
             log.warning("The parameter max_buffer_size is now deprecated and is not used anymore")
 
-    def close_buffer(self):
-        # type: () -> None
+    def close_buffer(self) -> None:
         """
         Flush the buffer and switch back to single metric packets.
 
@@ -1206,26 +1143,23 @@ class DogStatsd(object):
 
             self._config_lock.release()
 
-    def _reset_buffer(self):
-        # type: () -> None
+    def _reset_buffer(self) -> None:
         with self._buffer_lock:
             # Buffered lines are kept in two separate batches, one per expiry
             # policy: replay-safe metrics carry their own timestamp, the rest
             # are stamped on receipt.
-            self._buffer = []  # type: List[Text]           # non-replay-safe
-            self._buffer_rs = []  # type: List[Text]        # replay-safe
+            self._buffer: List[Text] = []           # non-replay-safe
+            self._buffer_rs: List[Text] = []        # replay-safe
             # Running packet size per buffer, each including the newline that
             # will join its lines, so both stay under _max_payload_size
             # independently.
-            self._buffer_size = 0  # type: int
-            self._buffer_rs_size = 0  # type: int
+            self._buffer_size: int = 0
+            self._buffer_rs_size: int = 0
 
-    def flush(self):
-        # type: () -> None
+    def flush(self) -> None:
         self.flush_buffered_metrics()
 
-    def _flush_one_buffer(self, replay_safe):
-        # type: (bool) -> None
+    def _flush_one_buffer(self, replay_safe: bool) -> None:
         """Flush just the batch holding lines with the given expiry policy.
 
         Caller must hold self._buffer_lock (an RLock, so a re-entrant flush
@@ -1247,8 +1181,7 @@ class DogStatsd(object):
             self._buffer_size = 0
         self._send_to_server("\n".join(lines), replay_safe)
 
-    def flush_buffered_metrics(self):
-        # type: () -> None
+    def flush_buffered_metrics(self) -> None:
         """
         Flush the metrics buffer by sending the data to the server.
 
@@ -1264,8 +1197,7 @@ class DogStatsd(object):
             self._flush_one_buffer(False)
             self._flush_one_buffer(True)
 
-    def flush_aggregated_metrics(self):
-        # type: () -> None
+    def flush_aggregated_metrics(self) -> None:
         """
         Flush the aggregated metrics
         """
@@ -1288,12 +1220,12 @@ class DogStatsd(object):
 
     def gauge(
         self,
-        metric,  # type: Text
-        value,  # type: float
-        tags=None,  # type: Optional[List[str]]
-        sample_rate=None,  # type: Optional[float]
-        cardinality=None,  # type: Optional[str]
-    ):  # type: (...) -> None
+        metric: Text,
+        value: float,
+        tags: Optional[List[str]] = None,
+        sample_rate: Optional[float] = None,
+        cardinality: Optional[str] = None,
+    ) -> None:
         """
         Record the value of a gauge, optionally setting a list of tags and a
         sample rate.
@@ -1309,13 +1241,13 @@ class DogStatsd(object):
     # Minimum Datadog Agent version: 7.40.0
     def gauge_with_timestamp(
         self,
-        metric,  # type: Text
-        value,  # type: float
-        timestamp,  # type: int
-        tags=None,  # type: Optional[List[str]]
-        sample_rate=None,  # type: Optional[float]
-        cardinality=None,  # type: Optional[str]
-    ):  # type: (...) -> None
+        metric: Text,
+        value: float,
+        timestamp: int,
+        tags: Optional[List[str]] = None,
+        sample_rate: Optional[float] = None,
+        cardinality: Optional[str] = None,
+    ) -> None:
         """
         Record the value of a gauge with a Unix timestamp (in seconds),
         optionally setting a list of tags and a sample rate.
@@ -1332,12 +1264,12 @@ class DogStatsd(object):
 
     def count(
         self,
-        metric,  # type: Text
-        value,  # type: float
-        tags=None,  # type: Optional[List[str]]
-        sample_rate=None,  # type: Optional[float]
-        cardinality=None,  # type: Optional[str]
-    ):  # type: (...) -> None
+        metric: Text,
+        value: float,
+        tags: Optional[List[str]] = None,
+        sample_rate: Optional[float] = None,
+        cardinality: Optional[str] = None,
+    ) -> None:
         """
         Count tracks how many times something happened per second, tags and a sample
         rate.
@@ -1352,13 +1284,13 @@ class DogStatsd(object):
     # Minimum Datadog Agent version: 7.40.0
     def count_with_timestamp(
         self,
-        metric,  # type: Text
-        value,  # type: float
-        timestamp=0,  # type: int
-        tags=None,  # type: Optional[List[str]]
-        sample_rate=None,  # type: Optional[float]
-        cardinality=None,  # type: Optional[str]
-    ):  # type: (...) -> None
+        metric: Text,
+        value: float,
+        timestamp: int = 0,
+        tags: Optional[List[str]] = None,
+        sample_rate: Optional[float] = None,
+        cardinality: Optional[str] = None,
+    ) -> None:
         """
         Count how many times something happened at a given Unix timestamp in seconds,
         tags and a sample rate.
@@ -1374,12 +1306,12 @@ class DogStatsd(object):
 
     def increment(
         self,
-        metric,  # type: Text
-        value=1,  # type: float
-        tags=None,  # type: Optional[List[str]]
-        sample_rate=None,  # type: Optional[float]
-        cardinality=None,  # type: Optional[str]
-    ):  # type: (...) -> None
+        metric: Text,
+        value: float = 1,
+        tags: Optional[List[str]] = None,
+        sample_rate: Optional[float] = None,
+        cardinality: Optional[str] = None,
+    ) -> None:
         """
         Increment a counter, optionally setting a value, tags and a sample
         rate.
@@ -1394,12 +1326,12 @@ class DogStatsd(object):
 
     def decrement(
         self,
-        metric,  # type: Text
-        value=1,  # type: float
-        tags=None,  # type: Optional[List[str]]
-        sample_rate=None,  # type: Optional[float]
-        cardinality=None,  # type: Optional[str]
-    ):  # type: (...) -> None
+        metric: Text,
+        value: float = 1,
+        tags: Optional[List[str]] = None,
+        sample_rate: Optional[float] = None,
+        cardinality: Optional[str] = None,
+    ) -> None:
         """
         Decrement a counter, optionally setting a value, tags and a sample
         rate.
@@ -1415,12 +1347,12 @@ class DogStatsd(object):
 
     def histogram(
         self,
-        metric,  # type: Text
-        value,  # type: float
-        tags=None,  # type: Optional[List[str]]
-        sample_rate=None,  # type: Optional[float]
-        cardinality=None,  # type: Optional[str]
-    ):  # type: (...) -> None
+        metric: Text,
+        value: float,
+        tags: Optional[List[str]] = None,
+        sample_rate: Optional[float] = None,
+        cardinality: Optional[str] = None,
+    ) -> None:
         """
         Sample a histogram value, optionally setting tags and a sample rate.
 
@@ -1434,12 +1366,12 @@ class DogStatsd(object):
 
     def distribution(
         self,
-        metric,  # type: Text
-        value,  # type: float
-        tags=None,  # type: Optional[List[str]]
-        sample_rate=None,  # type: Optional[float]
-        cardinality=None,  # type: Optional[str]
-    ):  # type: (...) -> None
+        metric: Text,
+        value: float,
+        tags: Optional[List[str]] = None,
+        sample_rate: Optional[float] = None,
+        cardinality: Optional[str] = None,
+    ) -> None:
         """
         Send a global distribution value, optionally setting tags and a sample rate.
 
@@ -1453,12 +1385,12 @@ class DogStatsd(object):
 
     def timing(
         self,
-        metric,  # type: Text
-        value,  # type: float
-        tags=None,  # type: Optional[List[str]]
-        sample_rate=None,  # type: Optional[float]
-        cardinality=None,  # type: Optional[str]
-    ):  # type: (...) -> None
+        metric: Text,
+        value: float,
+        tags: Optional[List[str]] = None,
+        sample_rate: Optional[float] = None,
+        cardinality: Optional[str] = None,
+    ) -> None:
         """
         Record a timing, optionally setting tags and a sample rate.
 
@@ -1471,11 +1403,11 @@ class DogStatsd(object):
 
     def timed(
         self,
-        metric=None,  # type: Optional[Text]
-        tags=None,  # type: Optional[List[str]]
-        sample_rate=None,  # type: Optional[float]
-        use_ms=None,  # type: Optional[bool]
-    ):  # type: (...) -> TimedContextManagerDecorator
+        metric: Optional[Text] = None,
+        tags: Optional[List[str]] = None,
+        sample_rate: Optional[float] = None,
+        use_ms: Optional[bool] = None,
+    ) -> TimedContextManagerDecorator:
         """
         A decorator or context manager that will measure the distribution of a
         function's/context's run time. Optionally specify a list of tags or a
@@ -1505,12 +1437,11 @@ class DogStatsd(object):
 
     def distributed(
         self,
-        metric=None,  # type: Optional[Text]
-        tags=None,  # type: Optional[List[str]]
-        sample_rate=None,  # type: Optional[float]
-        use_ms=None,  # type: Optional[bool]
-    ):
-        # type: (...) -> DistributedContextManagerDecorator
+        metric: Optional[Text] = None,
+        tags: Optional[List[str]] = None,
+        sample_rate: Optional[float] = None,
+        use_ms: Optional[bool] = None,
+    ) -> DistributedContextManagerDecorator:
         """
         A decorator or context manager that will measure the distribution of a
         function's/context's run time using custom metric distribution.
@@ -1538,8 +1469,12 @@ class DogStatsd(object):
         """
         return DistributedContextManagerDecorator(self, metric, tags, sample_rate, use_ms)
 
-    def set(self, metric, value, tags=None, sample_rate=None, cardinality=None):
-        # type: (Text, Any, Optional[List[str]], Optional[float], Optional[str]) -> None
+    def set(self,
+            metric: Text,
+            value: Any,
+            tags: Optional[List[str]] = None,
+            sample_rate: Optional[float] = None,
+            cardinality: Optional[str] = None) -> None:
         """
         Sample a set value.
 
@@ -1550,8 +1485,7 @@ class DogStatsd(object):
         else:
             self.aggregator.set(metric, value, tags, sample_rate, cardinality=cardinality)
 
-    def close_socket(self):
-        # type: () -> None
+    def close_socket(self) -> None:
         """
         Closes connected socket if connected.
         """
@@ -1571,15 +1505,21 @@ class DogStatsd(object):
                 self.telemetry_socket = None
 
     def _serialize_metric(
-        self, metric, metric_type, value, tags, sample_rate=1, timestamp=0, cardinality=None
-    ):
-        # type: (Text, str, Any, Optional[List[str]], Optional[float], int, Optional[str]) -> str
+        self,
+        metric: Text,
+        metric_type: str,
+        value: Any,
+        tags: Optional[List[str]],
+        sample_rate: Optional[float] = 1,
+        timestamp: int = 0,
+        cardinality: Optional[str] = None,
+    ) -> str:
         # Create/format the metric packet
-        parts = [(self.namespace + ".") if self.namespace else "", metric, ":", text(value), "|", metric_type]
+        parts = [(self.namespace + ".") if self.namespace else "", metric, ":", str(value), "|", metric_type]
 
         if sample_rate != 1:
             parts.append("|@")
-            parts.append(text(sample_rate))
+            parts.append(str(sample_rate))
 
         constant_tags_str = self._constant_tags_str
         if tags or constant_tags_str:
@@ -1606,12 +1546,19 @@ class DogStatsd(object):
 
         if timestamp > 0:
             parts.append("|T")
-            parts.append(text(timestamp))
+            parts.append(str(timestamp))
 
         return "".join(parts)
 
-    def _report(self, metric, metric_type, value, tags, sample_rate, timestamp=0, sampling=True, cardinality=None):
-        # type: (Text, str, Any, Optional[List[str]], Optional[float], int, bool, Optional[str]) -> None
+    def _report(self,
+                metric: Text,
+                metric_type: str,
+                value: Any,
+                tags: Optional[List[str]],
+                sample_rate: Optional[float],
+                timestamp: int = 0,
+                sampling: bool = True,
+                cardinality: Optional[str] = None) -> None:
         """
         Create a metric packet and send it.
 
@@ -1656,8 +1603,7 @@ class DogStatsd(object):
         # Send it
         self._send(payload, replay_safe)
 
-    def _reset_telemetry(self):
-        # type: () -> None
+    def _reset_telemetry(self) -> None:
         self.metrics_count = 0
         self.events_count = 0
         self.service_checks_count = 0
@@ -1673,35 +1619,29 @@ class DogStatsd(object):
 
     # Aliases for backwards compatibility.
     @property
-    def packets_dropped(self):
-        # type: () -> int
+    def packets_dropped(self) -> int:
         return self.packets_dropped_queue + self.packets_dropped_writer + self.packets_dropped_expired
 
     @property
-    def bytes_dropped(self):
-        # type: () -> int
+    def bytes_dropped(self) -> int:
         return self.bytes_dropped_queue + self.bytes_dropped_writer + self.bytes_dropped_expired
 
-    def _account_dropped_queue_full(self, item):
-        # type: (QueuedItem) -> None
+    def _account_dropped_queue_full(self, item: QueuedItem) -> None:
         """A payload was evicted from the sender queue to make room for a new one."""
         self.packets_dropped_queue += 1
         self.bytes_dropped_queue += len(payload_text(item).encode(self.encoding))
 
-    def _account_dropped_expired(self, item):
-        # type: (QueuedItem) -> None
+    def _account_dropped_expired(self, item: QueuedItem) -> None:
         """A payload sat in the sender queue longer than the configured expiry (sender_queue_expiry_seconds)."""
         self.packets_dropped_expired += 1
         self.bytes_dropped_expired += len(payload_text(item).encode(self.encoding))
 
-    def _account_dropped_writer(self, item):
-        # type: (QueuedItem) -> None
+    def _account_dropped_writer(self, item: QueuedItem) -> None:
         """A payload could not be written and is not being retried further."""
         self.packets_dropped_writer += 1
         self.bytes_dropped_writer += len(payload_text(item).encode(self.encoding))
 
-    def _flush_telemetry(self):
-        # type: () -> str
+    def _flush_telemetry(self) -> str:
         tags = self._client_tags[:]
         tags.append("client_transport:{}".format(self._transport))
         tags.extend(self.constant_tags)
@@ -1735,13 +1675,11 @@ class DogStatsd(object):
             telemetry_tags,
         )
 
-    def _is_telemetry_flush_time(self):
-        # type: () -> bool
+    def _is_telemetry_flush_time(self) -> bool:
         return self._telemetry and \
             self._last_flush_time + self._telemetry_flush_interval < time.time()
 
-    def _send_to_server(self, packet, replay_safe=False):
-        # type: (str, bool) -> None
+    def _send_to_server(self, packet: str, replay_safe: bool = False) -> None:
         # Skip the lock if the queue is None or a shutdown has already been
         # requested -- the lock-protected recheck below is what actually has
         # to be correct; this is purely an optimization to avoid the lock
@@ -1770,8 +1708,7 @@ class DogStatsd(object):
 
         self._xmit_packet_with_telemetry(packet + '\n')
 
-    def _xmit_packet_with_telemetry(self, packet, queue_mode=False):
-        # type: (str, bool) -> Optional[bool]
+    def _xmit_packet_with_telemetry(self, packet: str, queue_mode: bool = False) -> Optional[bool]:
         """Send one packet, optionally piggy-backing a telemetry flush.
 
         :param queue_mode: True when called from the background sender
@@ -1796,8 +1733,7 @@ class DogStatsd(object):
 
         return sent
 
-    def _xmit_packet(self, packet, is_telemetry, queue_mode=False):
-        # type: (str, bool, bool) -> Optional[bool]
+    def _xmit_packet(self, packet: str, is_telemetry: bool, queue_mode: bool = False) -> Optional[bool]:
         """Attempt to send a packet, once.
 
         Returns True if sent. Otherwise returns False for a definitive,
@@ -1836,8 +1772,7 @@ class DogStatsd(object):
             self.packets_dropped_writer += 1
         return False
 
-    def _xmit_packet_attempt(self, packet, is_telemetry, retry_eligible):
-        # type: (str, bool, bool) -> Optional[bool]
+    def _xmit_packet_attempt(self, packet: str, is_telemetry: bool, retry_eligible: bool) -> Optional[bool]:
         """
         Attempt to send a single packet.
 
@@ -1913,8 +1848,7 @@ class DogStatsd(object):
 
             return False
 
-    def _send_to_buffer(self, packet, replay_safe=False):
-        # type: (str, bool) -> None
+    def _send_to_buffer(self, packet: str, replay_safe: bool = False) -> None:
         """Append one serialized line to the batch matching its expiry policy.
 
         Deliberately written out per branch rather than indexing a dict by
@@ -1939,8 +1873,7 @@ class DogStatsd(object):
                 self._buffer.append(packet)
                 self._buffer_size += length
 
-    def _should_flush(self, length_to_be_added, replay_safe=False):
-        # type: (int, bool) -> bool
+    def _should_flush(self, length_to_be_added: int, replay_safe: bool = False) -> bool:
         """Whether adding a line of this length would overflow its batch.
 
         NOT used by _send_to_buffer(), which inlines the same comparison to
@@ -1952,29 +1885,26 @@ class DogStatsd(object):
         return current + length_to_be_added + 1 > self._max_payload_size
 
     @staticmethod
-    def _escape_event_content(string):
-        # type: (str) -> str
+    def _escape_event_content(string: str) -> str:
         return string.replace("\n", "\\n")
 
     @staticmethod
-    def _escape_service_check_message(string):
-        # type: (str) -> str
+    def _escape_service_check_message(string: str) -> str:
         return string.replace("\n", "\\n").replace("m:", "m\\:")
 
     def event(
         self,
-        title,  # type: Text
-        message,  # type: Text
-        alert_type=None,  # type: Optional[str]
-        aggregation_key=None,  # type: Optional[Text]
-        source_type_name=None,  # type: Optional[Text]
-        date_happened=None,  # type: Optional[int]
-        priority=None,  # type: Optional[str]
-        tags=None,  # type: Optional[List[str]]
-        hostname=None,  # type: Optional[Text]
-        cardinality=None,  # type: Optional[str]
-    ):
-        # type: (...) -> None
+        title: Text,
+        message: Text,
+        alert_type: Optional[str] = None,
+        aggregation_key: Optional[Text] = None,
+        source_type_name: Optional[Text] = None,
+        date_happened: Optional[int] = None,
+        priority: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        hostname: Optional[Text] = None,
+        cardinality: Optional[str] = None,
+    ) -> None:
         """
         Send an event. Attributes are the same as the Event API.
             http://docs.datadoghq.com/api/
@@ -1985,17 +1915,10 @@ class DogStatsd(object):
         title = DogStatsd._escape_event_content(title)
         message = DogStatsd._escape_event_content(message)
 
-        # pylint: disable=undefined-variable
-        if sys.version_info[0] < 3:
-            if not isinstance(title, unicode):                                       # noqa: F821
-                title = unicode(DogStatsd._escape_event_content(title), 'utf8')      # noqa: F821
-            if not isinstance(message, unicode):                                     # noqa: F821
-                message = unicode(DogStatsd._escape_event_content(message), 'utf8')  # noqa: F821
-
         # Append all client level tags to every event
         tags = self._add_constant_tags(tags)
 
-        string = u"_e{{{},{}}}:{}|{}".format(
+        string = "_e{{{},{}}}:{}|{}".format(
             len(title.encode('utf8', 'replace')),
             len(message.encode('utf8', 'replace')),
             title,
@@ -2028,7 +1951,7 @@ class DogStatsd(object):
 
         if len(string) > 8 * 1024:
             raise ValueError(
-                u'Event "{0}" payload is too big (>=8KB). Event discarded'.format(
+                'Event "{0}" payload is too big (>=8KB). Event discarded'.format(
                     title
                 )
             )
@@ -2042,15 +1965,14 @@ class DogStatsd(object):
 
     def service_check(
         self,
-        check_name,
-        status,
-        tags=None,
-        timestamp=None,
-        cardinality=None,
-        hostname=None,
-        message=None,
-    ):
-        # type: (str, int, Optional[List[str]], Optional[int], Optional[str], Optional[str], Optional[str]) -> None
+        check_name: str,
+        status: int,
+        tags: Optional[List[str]] = None,
+        timestamp: Optional[int] = None,
+        cardinality: Optional[str] = None,
+        hostname: Optional[str] = None,
+        message: Optional[str] = None,
+    ) -> None:
         """
         Send a service check run.
 
@@ -2058,7 +1980,7 @@ class DogStatsd(object):
         """
         message = DogStatsd._escape_service_check_message(message) if message is not None else ""
 
-        string = u"_sc|{0}|{1}".format(check_name, status)
+        string = "_sc|{0}|{1}".format(check_name, status)
 
         # Append all client level tags to every status check
         tags = self._add_constant_tags(tags)
@@ -2069,17 +1991,17 @@ class DogStatsd(object):
         validate_cardinality(cardinality)
 
         if timestamp:
-            string = u"{0}|d:{1}".format(string, timestamp)
+            string = "{0}|d:{1}".format(string, timestamp)
         if hostname:
-            string = u"{0}|h:{1}".format(string, hostname)
+            string = "{0}|h:{1}".format(string, hostname)
         if tags:
-            string = u"{0}|#{1}".format(string, ",".join(tags))
+            string = "{0}|#{1}".format(string, ",".join(tags))
         if message:
-            string = u"{0}|m:{1}".format(string, message)
+            string = "{0}|m:{1}".format(string, message)
         if self._container_id:
-            string = u"{0}|c:{1}".format(string, self._container_id)
+            string = "{0}|c:{1}".format(string, self._container_id)
         if cardinality:
-            string = u"{0}|card:{1}".format(string, cardinality)
+            string = "{0}|card:{1}".format(string, cardinality)
 
         if self._telemetry:
             self.service_checks_count += 1
@@ -2089,33 +2011,28 @@ class DogStatsd(object):
         self._send(string, replay_safe=bool(timestamp))
 
     @staticmethod
-    def _normalize_and_join_tags(tags):
-        # type: (List[str]) -> str
+    def _normalize_and_join_tags(tags: List[str]) -> str:
         """Normalize a tag list and join into a comma-separated string."""
         if tags:
             return ",".join(normalize_tags(tags))
 
         return ""
 
-    def _rebuild_constant_tags_str(self):
-        # type: () -> None
+    def _rebuild_constant_tags_str(self) -> None:
         with self._config_lock:
             self._constant_tags_str = self._normalize_and_join_tags(self._constant_tags)
 
     @property
-    def constant_tags(self):
-        # type: () -> TagList
+    def constant_tags(self) -> TagList:
         return self._constant_tags
 
     @constant_tags.setter
-    def constant_tags(self, value):
-        # type: (Union[TagList, List[str]]) -> None
+    def constant_tags(self, value: Union[TagList, List[str]]) -> None:
         with self._config_lock:
             self._constant_tags = TagList(value or [], on_change=self._rebuild_constant_tags_str)
             self._rebuild_constant_tags_str()
 
-    def _add_constant_tags(self, tags):
-        # type: (Optional[List[str]]) -> Optional[List[str]]
+    def _add_constant_tags(self, tags: Optional[List[str]]) -> Optional[List[str]]:
         with self._config_lock:
             if self._constant_tags:
                 if tags:
@@ -2124,8 +2041,7 @@ class DogStatsd(object):
                 return list(self._constant_tags)
         return tags
 
-    def _is_origin_detection_enabled(self, container_id, origin_detection_enabled):
-        # type: (Optional[Text], bool) -> bool
+    def _is_origin_detection_enabled(self, container_id: Optional[Text], origin_detection_enabled: bool) -> bool:
         """
         Returns whether the client should fill the container field.
         If a user-defined container ID is provided, we don't ignore origin detection
@@ -2139,8 +2055,7 @@ class DogStatsd(object):
         value = os.environ.get(ORIGIN_DETECTION_ENABLED, "")
         return value.lower() not in {"no", "false", "0", "n", "off"}
 
-    def _set_container_id(self, container_id, origin_detection_enabled):
-        # type: (Optional[Text], bool) -> None
+    def _set_container_id(self, container_id: Optional[Text], origin_detection_enabled: bool) -> None:
         """
         Initializes the container ID.
         It can either be provided by the user or read from cgroups.
@@ -2156,8 +2071,7 @@ class DogStatsd(object):
                 log.debug("Couldn't get container ID: %s", str(e))
                 self._container_id = None
 
-    def _start_sender_thread(self):
-        # type: () -> None
+    def _start_sender_thread(self) -> None:
         if not self._sender_enabled or self._forking:
             return
 
@@ -2187,8 +2101,7 @@ class DogStatsd(object):
         self._sender_thread.daemon = True
         self._sender_thread.start()
 
-    def _stop_sender_thread(self, timeout=None):
-        # type: (Optional[float]) -> bool
+    def _stop_sender_thread(self, timeout: Optional[float] = None) -> bool:
         # Ask the sender to stop, with a deadline it must honor BEFORE
         # abandoning a payload stuck in its retry-by-requeuing loop (see
         # _sender_main_loop): a bounded caller's own timeout IS that
@@ -2243,8 +2156,7 @@ class DogStatsd(object):
         self._sender_thread = None
         return not abandoned
 
-    def _release_sender_state(self, pending_queue):
-        # type: (SenderQueue) -> None
+    def _release_sender_state(self, pending_queue: SenderQueue) -> None:
         """Drop the client's pointers to this sender's queue and thread.
 
         Called by the sender thread on its way out so the client self-heals
@@ -2259,8 +2171,7 @@ class DogStatsd(object):
         if self._sender_thread is threading.current_thread():
             self._sender_thread = None
 
-    def _sender_main_loop(self, pending_queue):
-        # type: (SenderQueue) -> None
+    def _sender_main_loop(self, pending_queue: SenderQueue) -> None:
         backoff = SENDER_RETRY_INITIAL_BACKOFF
         while True:
             item = pending_queue.get()
@@ -2326,8 +2237,7 @@ class DogStatsd(object):
             pending_queue.task_done(item)  # type: ignore[arg-type]
             backoff = SENDER_RETRY_INITIAL_BACKOFF
 
-    def wait_for_pending(self, timeout=None):
-        # type: (Optional[float]) -> bool
+    def wait_for_pending(self, timeout: Optional[float] = None) -> bool:
         """
         Flush the buffer and wait for all queued payloads to be written to the server.
 
@@ -2350,8 +2260,7 @@ class DogStatsd(object):
 
         return queue.join(timeout)
 
-    def pre_fork(self):
-        # type: () -> None
+    def pre_fork(self) -> None:
         """Prepare client for a process fork.
 
         Flush any pending payloads and stop all background threads.
@@ -2376,15 +2285,13 @@ class DogStatsd(object):
         self._stop_flush_thread()
         self._stop_sender_thread()
 
-    def post_fork_parent(self):
-        # type: () -> None
+    def post_fork_parent(self) -> None:
         """Restore the client state after a fork in the parent process."""
         self._start_flush_thread()
         self._start_sender_thread()
         self._config_lock.release()
 
-    def post_fork_child(self):
-        # type: () -> None
+    def post_fork_child(self) -> None:
         """Restore the client state after a fork in the child process."""
         self._config_lock.release()
 
@@ -2406,8 +2313,7 @@ class DogStatsd(object):
             self._start_flush_thread()
             self._start_sender_thread()
 
-    def stop(self, timeout=None):
-        # type: (Optional[float]) -> bool
+    def stop(self, timeout: Optional[float] = None) -> bool:
         """Stop the client.
 
         Disable buffering, aggregation, background sender and flush any pending payloads to the server.
