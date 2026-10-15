@@ -13,22 +13,20 @@ class AwsLogsIntegration(DeletableAPISubResource, ListableAPISubResource, Addabl
 
     _resource_name = "integration"
     _resource_id = "aws"
-    _sub_resource_name = ""  # type: str
+    _sub_resource_name: str = ""
 
     @classmethod
-    def list_log_services(cls, **params):
-        # type: (**Any) -> Any
+    def list_log_services(cls, **params: Any) -> Any:
         """
         List all namespace rules available as options.
 
         >>> api.AwsLogsIntegration.list_log_services()
         """
         cls._sub_resource_name = "logs/services"
-        return super(AwsLogsIntegration, cls).get_items(id=cls._resource_id, **params)
+        return super().get_items(id=cls._resource_id, **params)
 
     @classmethod
-    def add_log_lambda_arn(cls, **params):
-        # type: (**Any) -> Any
+    def add_log_lambda_arn(cls, **params: Any) -> Any:
         """
         Attach the Lambda ARN of the Lambda created for the Datadog-AWS \
         log collection to your AWS account ID to enable log collection.
@@ -39,11 +37,10 @@ class AwsLogsIntegration(DeletableAPISubResource, ListableAPISubResource, Addabl
         >>> api.AwsLogsIntegration.add_log_lambda_arn(account_id=account_id, lambda_arn=lambda_arn)
         """
         cls._sub_resource_name = "logs"
-        return super(AwsLogsIntegration, cls).add_items(id=cls._resource_id, **params)
+        return super().add_items(id=cls._resource_id, **params)
 
     @classmethod
-    def save_services(cls, **params):
-        # type: (**Any) -> Any
+    def save_services(cls, **params: Any) -> Any:
         """
         Enable Automatic Log collection for your AWS services.
 
@@ -53,11 +50,10 @@ class AwsLogsIntegration(DeletableAPISubResource, ListableAPISubResource, Addabl
         >>> api.AwsLogsIntegration.save_services()
         """
         cls._sub_resource_name = "logs/services"
-        return super(AwsLogsIntegration, cls).add_items(id=cls._resource_id, **params)
+        return super().add_items(id=cls._resource_id, **params)
 
     @classmethod
-    def delete_config(cls, **params):
-        # type: (**Any) -> Any
+    def delete_config(cls, **params: Any) -> Any:
         """
         Delete a Datadog-AWS log collection configuration by removing the specific Lambda ARN \
         associated with a given AWS account.
@@ -68,11 +64,10 @@ class AwsLogsIntegration(DeletableAPISubResource, ListableAPISubResource, Addabl
         >>> api.AwsLogsIntegration.delete_config(account_id=account_id, lambda_arn=lambda_arn)
         """
         cls._sub_resource_name = "logs"
-        return super(AwsLogsIntegration, cls).delete_items(id=cls._resource_id, **params)
+        return super().delete_items(id=cls._resource_id, **params)
 
     @classmethod
-    def check_lambda(cls, **params):
-        # type: (**Any) -> Any
+    def check_lambda(cls, **params: Any) -> Any:
         """
         Check function to see if a lambda_arn exists within an account. \
         This sends a job on our side if it does not exist, then immediately returns \
@@ -90,11 +85,10 @@ class AwsLogsIntegration(DeletableAPISubResource, ListableAPISubResource, Addabl
         >>> api.AwsLogsIntegration.check_lambda(account_id=account_id, lambda_arn=lambda_arn)
         """
         cls._sub_resource_name = "logs/check_async"
-        return super(AwsLogsIntegration, cls).add_items(id=cls._resource_id, **params)
+        return super().add_items(id=cls._resource_id, **params)
 
     @classmethod
-    def check_services(cls, **params):
-        # type: (**Any) -> Any
+    def check_services(cls, **params: Any) -> Any:
         """
         Test if permissions are present to add log-forwarding triggers for the \
         given services + AWS account. Input is the same as for save_services.
@@ -107,15 +101,14 @@ class AwsLogsIntegration(DeletableAPISubResource, ListableAPISubResource, Addabl
         >>> api.AwsLogsIntegration.check_services()
         """
         cls._sub_resource_name = "logs/services_async"
-        return super(AwsLogsIntegration, cls).add_items(id=cls._resource_id, **params)
+        return super().add_items(id=cls._resource_id, **params)
 
     @classmethod
-    def list(cls, **params):
-        # type: (**Any) -> Any
+    def list(cls, **params: Any) -> Any:
         """
         List all Datadog-AWS Logs integrations available in your Datadog organization.
 
         >>> api.AwsLogsIntegration.list()
         """
         cls._sub_resource_name = "logs"
-        return super(AwsLogsIntegration, cls).get_items(id=cls._resource_id, **params)
+        return super().get_items(id=cls._resource_id, **params)

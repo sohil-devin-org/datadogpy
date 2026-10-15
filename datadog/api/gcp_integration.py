@@ -15,18 +15,16 @@ class GcpIntegration(GetableAPIResource, CreateableAPIResource, DeletableAPIReso
     _resource_id = "gcp"
 
     @classmethod
-    def list(cls, **params):
-        # type: (**Any) -> Any
+    def list(cls, **params: Any) -> Any:
         """
         List all Datadog-Gcp integrations available in your Datadog organization.
 
         >>> api.GcpIntegration.list()
         """
-        return super(GcpIntegration, cls).get(id=cls._resource_id, **params)
+        return super().get(id=cls._resource_id, **params)
 
     @classmethod
-    def delete(cls, id=None, **body):
-        # type: (Optional[Any], **Any) -> Any
+    def delete(cls, id: Optional[Any] = None, **body: Any) -> Any:
         """
         Delete a given Datadog-GCP integration.
 
@@ -35,11 +33,15 @@ class GcpIntegration(GetableAPIResource, CreateableAPIResource, DeletableAPIReso
 
         >>> api.GcpIntegration.delete(project_id=project_id, client_email=client_email)
         """
-        return super(GcpIntegration, cls).delete(id=cls._resource_id, body=body)
+        return super().delete(id=cls._resource_id, body=body)
 
     @classmethod
-    def create(cls, attach_host_name=False, method="POST", id=None, params=None, **body):
-        # type: (bool, str, Optional[Any], Optional[Dict[str, Any]], **Any) -> Any
+    def create(cls,
+               attach_host_name: bool = False,
+               method: str = "POST",
+               id: Optional[Any] = None,
+               params: Optional[Dict[str, Any]] = None,
+               **body: Any) -> Any:
         """
         Add a new GCP integration config.
 
@@ -69,11 +71,10 @@ class GcpIntegration(GetableAPIResource, CreateableAPIResource, DeletableAPIReso
         auth_provider_x509_cert_url=auth_provider_x509_cert_url, \
         client_x509_cert_url=client_x509_cert_url, host_filters=host_filters)
         """
-        return super(GcpIntegration, cls).create(id=cls._resource_id, **body)
+        return super().create(id=cls._resource_id, **body)
 
     @classmethod
-    def update(cls, id=None, params=None, **body):
-        # type: (Optional[Any], Optional[Dict[str, Any]], **Any) -> Any
+    def update(cls, id: Optional[Any] = None, params: Optional[Dict[str, Any]] = None, **body: Any) -> Any:
         """
         Update an existing service account partially (one or multiple fields), \
         by supplying a new value for the field(s) to be updated.
@@ -95,5 +96,5 @@ class GcpIntegration(GetableAPIResource, CreateableAPIResource, DeletableAPIReso
         client_email=client_email, host_filters=host_filters, \
         automute=automute)
         """
-        actual_params = {}  # type: Dict[str, Any]
-        return super(GcpIntegration, cls).update(id=cls._resource_id, params=actual_params, **body)
+        actual_params: Dict[str, Any] = {}
+        return super().update(id=cls._resource_id, params=actual_params, **body)

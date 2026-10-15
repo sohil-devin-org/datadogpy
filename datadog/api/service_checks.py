@@ -14,8 +14,7 @@ class ServiceCheck(ActionAPIResource):
     """
 
     @classmethod
-    def check(cls, **body):
-        # type: (**Any) -> Any
+    def check(cls, **body: Any) -> Any:
         """
         Post check statuses for use with monitors
 
@@ -45,4 +44,4 @@ class ServiceCheck(ActionAPIResource):
             if param == "status" and value not in CheckStatus.ALL:
                 raise ApiError("Invalid status, expected one of: %s" % ", ".join(str(v) for v in CheckStatus.ALL))
 
-        return super(ServiceCheck, cls)._trigger_action("POST", "check_run", **body)
+        return super()._trigger_action("POST", "check_run", **body)

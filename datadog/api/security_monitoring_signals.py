@@ -28,8 +28,7 @@ class SecurityMonitoringSignal(
     _api_version = "v2"
 
     @classmethod
-    def get(cls, signal_id, **params):  # type: ignore[override]
-        # type: (str, **Any) -> Any
+    def get(cls, signal_id: str, **params: Any) -> Any:  # type: ignore[override]
         """
         Get a security signal's details.
 
@@ -38,11 +37,10 @@ class SecurityMonitoringSignal(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(SecurityMonitoringSignal, cls).get(signal_id, **params)
+        return super().get(signal_id, **params)
 
     @classmethod
-    def get_all(cls, **params):
-        # type: (**Any) -> Any
+    def get_all(cls, **params: Any) -> Any:
         """
         Get all security signals.
 
@@ -58,11 +56,10 @@ class SecurityMonitoringSignal(
 
         :returns: Dictionary representing the API's JSON response
         """
-        return super(SecurityMonitoringSignal, cls).get_all(**params)
+        return super().get_all(**params)
 
     @classmethod
-    def change_triage_state(cls, signal_id, state, **params):
-        # type: (str, str, **Any) -> Any
+    def change_triage_state(cls, signal_id: str, state: str, **params: Any) -> Any:
         """
         Change the triage state of security signals.
 

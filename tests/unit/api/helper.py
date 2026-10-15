@@ -26,7 +26,6 @@ from datadog.api.resources import (
     DeletableAPISubResource,
     ActionAPIResource
 )
-from datadog.util.compat import iteritems, is_p3k
 from tests.util.contextmanagers import EnvVars
 
 
@@ -39,7 +38,7 @@ FAKE_PROXY = {
 }
 
 
-class MockSession(object):
+class MockSession:
     """docstring for MockSession"""
     _args = None
     _kwargs = None
@@ -61,7 +60,7 @@ class MockSession(object):
 class MockResponse(requests.Response):
 
     def __init__(self, raise_for_status=False):
-        super(MockResponse, self).__init__()
+        super().__init__()
         self._raise_for_status = raise_for_status
 
     def raise_for_status(self):
@@ -118,11 +117,11 @@ class MyActionable(ActionAPIResource):
 
     @classmethod
     def trigger_class_action(cls, method, name, id=None, params=None, **body):
-        super(MyActionable, cls)._trigger_class_action(method, name, id, params, **body)
+        super()._trigger_class_action(method, name, id, params, **body)
 
     @classmethod
     def trigger_action(cls, method, name, id=None, **body):
-        super(MyActionable, cls)._trigger_action(method, name, id, **body)
+        super()._trigger_action(method, name, id, **body)
 
 
 # Test classes
@@ -145,10 +144,7 @@ class DatadogAPITestCase(unittest.TestCase):
         Load the response body from the given payload
         """
         mock_response = MockResponse(raise_for_status=raise_for_status)
-        if is_p3k():
-            mock_response.raw = BytesIO(bytes(response_body, 'utf-8'))
-        else:
-            mock_response.raw = BytesIO(response_body)
+        mock_response.raw = BytesIO(bytes(response_body, 'utf-8'))
         mock_response.status_code = status_code
 
         self.request_mock.request = Mock(return_value=mock_response)
@@ -178,7 +174,7 @@ class DatadogAPITestCase(unittest.TestCase):
 
         if params:
             self.assertIn('params', others)
-            for (k, v) in iteritems(params):
+            for (k, v) in params.items():
                 self.assertIn(k, others['params'], others['params'])
                 self.assertEqual(v, others['params'][k])
 
@@ -189,7 +185,7 @@ class DatadogAPITestCase(unittest.TestCase):
 
 class DatadogAPINoInitialization(DatadogAPITestCase):
     def tearDown(self):
-        super(DatadogAPINoInitialization, self).tearDown()
+        super().tearDown()
         # Restore default values
         api._api_key = None
         api._application_key = None
@@ -198,17 +194,17 @@ class DatadogAPINoInitialization(DatadogAPITestCase):
         api._proxies = None
 
     def setUp(self):
-        super(DatadogAPINoInitialization, self).setUp()
+        super().setUp()
         api._api_key = api._application_key = api._host_name = api._api_host = None
 
 
 class DatadogAPIWithInitialization(DatadogAPITestCase):
     def setUp(self):
-        super(DatadogAPIWithInitialization, self).setUp()
+        super().setUp()
         initialize(api_key=API_KEY, app_key=APP_KEY, api_host=API_HOST)
 
     def tearDown(self):
-        super(DatadogAPIWithInitialization, self).tearDown()
+        super().tearDown()
         # Restore default values
         api._api_key = None
         api._application_key = None

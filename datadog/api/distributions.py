@@ -16,12 +16,11 @@ class Distribution(SendableAPIResource):
     @classmethod
     def send(  # type: ignore[override]
         cls,
-        distributions=None,  # type: Optional[Any]
-        attach_host_name=True,  # type: bool
-        compress_payload=False,  # type: bool
-        **distribution  # type: Any
-    ):
-        # type: (...) -> Any
+        distributions: Optional[Any] = None,
+        attach_host_name: bool = True,
+        compress_payload: bool = False,
+        **distribution: Any
+    ) -> Any:
         """
         Submit a distribution metric or a list of distribution metrics to the distribution metric
         API
@@ -49,6 +48,6 @@ class Distribution(SendableAPIResource):
             # One distribution is sent
             distribution["points"] = format_points(distribution["points"])
             series_dict = {"series": [distribution]}
-        return super(Distribution, cls).send(
+        return super().send(
             attach_host_name=attach_host_name, compress_payload=compress_payload, **series_dict
         )
